@@ -1,0 +1,269 @@
+<style>
+	.ns-table-th-fixed {
+		background: #f5f7fa;
+	}
+
+	.status-badge {
+		display: inline-block;
+		padding: 4px 12px;
+		border-radius: 4px;
+		font-size: 12px;
+		font-weight: 500;
+	}
+
+	.status-badge.pending {
+		background: #fff3cd;
+		color: #856404;
+	}
+
+	.status-badge.approved {
+		background: #d1ecf1;
+		color: #0c5460;
+	}
+
+	.status-badge.rejected {
+		background: #f8d7da;
+		color: #721c24;
+	}
+</style>
+
+<!-- 搜索框 -->
+<div class="single-filter-box">
+	<div class="layui-form">
+		<div class="layui-inline">
+			<select name="status" lay-filter="status_filter">
+				<option value="">全部状态</option>
+				<option value="0">待审核</option>
+				<option value="1">审核通过</option>
+				<option value="-1">审核拒绝</option>
+			</select>
+		</div>
+		<div class="layui-inline">
+			<input type="text" name="search_text" placeholder="搜索会员昵称/手机号" autocomplete="off" class="layui-input">
+			<button type="button" class="layui-btn layui-btn-primary" lay-filter="search" lay-submit>
+				<i class="layui-icon">&#xe615;</i>
+			</button>
+		</div>
+	</div>
+</div>
+
+<!-- 列表 -->
+<table id="application_list" lay-filter="application_list"></table>
+
+<!-- 审核状态模板 -->
+<script type="text/html" id="statusTpl">
+	{{# if (d.status == 0) { }}
+		<span class="status-badge pending">待审核</span>
+	{{# } else if (d.status == 1) { }}
+		<span class="status-badge approved">审核通过</span>
+	{{# } else if (d.status == -1) { }}
+		<span class="status-badge rejected">审核拒绝</span>
+	{{# } }}
+</script>
+
+<!-- 操作按钮模板 -->
+<script type="text/html" id="operation">
+	<div class="table-btn">
+		{{# if (d.status === 0) { }}
+			<a class="layui-btn layui-btn-sm" lay-event="approve">通过</a>
+			<a class="layui-btn layui-btn-sm layui-btn-danger" lay-event="reject">拒绝</a>
+		{{# } else { }}
+			<span style="color: #999;">已处理</span>
+		{{# } }}
+	</div>
+</script>
+
+<script>
+	var form, table;
+	layui.use(['form'], function() {
+		form = layui.form;
+		var repeat_flag = false;
+
+		/**
+		 * 加载表格
+		 */
+		table = new Table({
+			elem: '#application_list',
+			url: ns.url("shop/membervip/applicationList"),
+			cols: [
+				[
+					{
+						field: 'application_id',
+						title: '申请ID',
+						width: '8%',
+						unresize: 'false'
+					}, {
+						field: 'member_nickname',
+						title: '申请人',
+						width: '10%',
+						unresize: 'false'
+					}, {
+						field: 'member_mobile',
+						title: '手机号',
+						width: '10%',
+						unresize: 'false'
+					}, {
+						field: 'realname',
+						title: '真实姓名',
+						width: '10%',
+						unresize: 'false'
+					}, {
+						field: 'inviter_nickname',
+						title: '邀请人',
+						width: '10%',
+						unresize: 'false'
+					}, {
+						field: 'create_time',
+						title: '申请时间',
+						width: '12%',
+						unresize: 'false',
+						templet: function(d) {
+							return ns.time_to_date(d.create_time);
+						}
+					}, {
+						field: 'status',
+						title: '审核状态',
+						width: '10%',
+						unresize: 'false',
+						templet: '#statusTpl'
+					}, {
+						field: 'audit_time',
+						title: '审核时间',
+						width: '12%',
+						unresize: 'false',
+						templet: function(d) {
+							return d.audit_time ? ns.time_to_date(d.audit_time) : '-';
+						}
+					}, {
+						field: 'audit_remark',
+						title: '审核意见',
+						width: '10%',
+						unresize: 'false',
+						templet: function(d) {
+							return d.audit_remark || '-';
+						}
+					}, {
+						title: '操作',
+						width: '8%',
+						unresize: 'false',
+						toolbar: '#operation',
+						align: 'center'
+					}
+				]
+			]
+		});
+
+		/**
+		 * 监听工具栏操作
+		 */
+		table.tool(function(obj) {
+			var data = obj.data;
+			switch (obj.event) {
+				case 'approve': // 审核通过
+					approveApplication(data.application_id);
+					break;
+				case 'reject': // 审核拒绝
+					rejectApplication(data);
+					break;
+			}
+		});
+
+		/**
+		 * 审核通过
+		 */
+		function approveApplication(application_id) {
+			if (repeat_flag) return false;
+
+			layer.confirm('确认通过该申请吗？', {
+				icon: 3,
+				title: '提示'
+			}, function(index) {
+				layer.close(index);
+				repeat_flag = true;
+
+				$.ajax({
+					url: ns.url("shop/membervip/approve"),
+					data: { application_id },
+					dataType: 'JSON',
+					type: 'POST',
+					success: function(res) {
+						layer.msg(res.message);
+						repeat_flag = false;
+						if (res.code == 0) {
+							table.reload();
+						}
+					}
+				});
+			}, function() {
+				layer.close();
+			});
+		}
+
+		/**
+		 * 审核拒绝
+		 */
+		function rejectApplication(data) {
+			if (repeat_flag) return false;
+
+			layer.prompt({
+				formType: 2,
+				title: '拒绝申请 - ' + data.member_nickname,
+				area: ['500px', '250px'],
+				value: '',
+				maxlength: 200
+			}, function(value, index) {
+				if (!value || value.trim() === '') {
+					layer.msg('请输入拒绝原因');
+					return false;
+				}
+
+				layer.close(index);
+				repeat_flag = true;
+
+				$.ajax({
+					url: ns.url("shop/membervip/reject"),
+					data: {
+						application_id: data.application_id,
+						remark: value
+					},
+					dataType: 'JSON',
+					type: 'POST',
+					success: function(res) {
+						layer.msg(res.message);
+						repeat_flag = false;
+						if (res.code == 0) {
+							table.reload();
+						}
+					}
+				});
+			});
+		}
+
+		/**
+		 * 搜索功能
+		 */
+		form.on('submit(search)', function(data) {
+			table.reload({
+				page: {
+					curr: 1
+				},
+				where: data.field
+			});
+			return false;
+		});
+
+		/**
+		 * 状态筛选
+		 */
+		form.on('select(status_filter)', function(data) {
+			table.reload({
+				page: {
+					curr: 1
+				},
+				where: {
+					status: data.value
+				}
+			});
+		});
+	});
+</script>
