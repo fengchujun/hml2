@@ -263,6 +263,24 @@ class MemberVip extends BaseModel
                 ['site_id', '=', $site_id]
             ]);
 
+            // 4.5. 升级为特邀会员后，重新生成会员编号
+            try {
+                $member_code_model = new MemberCode();
+                $member_info = model('member')->getInfo([
+                    ['member_id', '=', $application['member_id']],
+                    ['site_id', '=', $site_id]
+                ], 'mobile');
+
+                if (!empty($member_info) && !empty($member_info['mobile'])) {
+                    // 生成新的特邀会员编号（member_level=2）
+                    $new_member_code = $member_code_model->generateMemberCode($member_info['mobile'], 2);
+                    $member_code_model->updateMemberCode($application['member_id'], $new_member_code);
+                }
+            } catch (\Exception $e) {
+                // 会员编号生成失败，记录日志但不影响升级流程
+                \think\facade\Log::write('升级特邀会员时重新生成编号失败：' . $e->getMessage());
+            }
+
             // 5. 扣除邀请人名额（锁定 -> 已用）
             model('member')->update([
                 'invite_quota_locked' => ['dec', 1],

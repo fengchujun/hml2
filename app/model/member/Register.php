@@ -147,6 +147,22 @@ class Register extends BaseModel
         $member_id = model("member")->add($data_reg);
 
         if ($member_id) {
+            // 生成会员编号
+            try {
+                $member_code_model = new MemberCode();
+                $mobile = $data_reg['mobile'] ?? '';
+                $member_level = $data_reg['member_level'] ?? 0;
+
+                // 如果有手机号，生成会员编号
+                if (!empty($mobile)) {
+                    $member_code = $member_code_model->generateMemberCode($mobile, $member_level);
+                    $member_code_model->updateMemberCode($member_id, $member_code);
+                }
+            } catch (\Exception $e) {
+                // 会员编号生成失败，记录日志但不影响注册流程
+                \think\facade\Log::write('会员编号生成失败：' . $e->getMessage());
+            }
+
             if (!empty($member_level_info)) {
                 $award_array['point'] += $member_level_info['send_point'];
                 $award_array['balance'] += $member_level_info['send_balance'];
