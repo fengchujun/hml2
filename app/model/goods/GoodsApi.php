@@ -185,6 +185,11 @@ class GoodsApi extends BaseModel
 
         $this->handleGoodsDetailData($res['goods_sku_detail'], $member_id, $site_id);
 
+        // brand_id=2 的商品对普通会员(member_level=1)显示库存为0
+        if (isset($res['goods_sku_detail']['brand_id']) && $res['goods_sku_detail']['brand_id'] == 2 && $member_level == 1) {
+            $res['goods_sku_detail']['stock'] = 0;
+        }
+
         return $this->success($res);
 
     }
@@ -196,7 +201,7 @@ class GoodsApi extends BaseModel
             ['gs.goods_id', '=', $goods_id],
             ['gs.site_id', '=', $site_id]
         ];
-        $field = 'gs.sku_id,gs.goods_id,g.goods_image,gs.is_consume_discount,gs.discount_config,gs.discount_method,gs.sku_name,gs.sku_spec_format,gs.price,gs.discount_price,gs.promotion_type,gs.end_time,gs.stock,gs.sku_image,gs.sku_images,gs.goods_spec_format,gs.max_buy,gs.min_buy,gs.is_limit,gs.limit_type,gs.support_trade_type,gs.market_price,g.goods_state,gs.member_price,gs.max_buy,g.is_fenxiao,g.fenxiao_type,gs.fenxiao_price,g.promotion_addon';
+        $field = 'gs.sku_id,gs.goods_id,g.goods_image,gs.is_consume_discount,gs.discount_config,gs.discount_method,gs.sku_name,gs.sku_spec_format,gs.price,gs.discount_price,gs.promotion_type,gs.end_time,gs.stock,gs.sku_image,gs.sku_images,gs.goods_spec_format,gs.max_buy,gs.min_buy,gs.is_limit,gs.limit_type,gs.support_trade_type,gs.market_price,g.goods_state,gs.member_price,gs.max_buy,g.is_fenxiao,g.fenxiao_type,gs.fenxiao_price,g.promotion_addon,g.brand_id';
         $join = [
             ['goods g', 'g.goods_id = gs.goods_id', 'inner']
         ];
@@ -217,9 +222,14 @@ class GoodsApi extends BaseModel
         $goods_model = new Goods();
         $goods_sku_list = $goods_model->goodsStockTransform($goods_sku_list, $store_id, $store_data['config']['store_business']);
 
+        // 获取会员等级
+        $member_level = 0;
         if ($member_id > 0) {
             //会员信息
             $member_info = model("member")->getInfo([['member_id', '=', $member_id]], 'member_id,is_fenxiao,fenxiao_id,member_level,member_level_type');
+            if (!empty($member_info)) {
+                $member_level = $member_info['member_level'];
+            }
             $addon_suppermember_is_exist = addon_is_exit('supermember');
             if ($addon_suppermember_is_exist) {
                 if ($member_info['member_level_type'] == 0) {
@@ -281,6 +291,10 @@ class GoodsApi extends BaseModel
                     $goods_sku_list[$k]['promotion_type'] = 'presale';
                     $goods_sku_list[$k]['presale_id'] = $presale_sku['presale_id'];
                 }
+            }
+            // brand_id=2 的商品对普通会员(member_level=1)显示库存为0
+            if (isset($v['brand_id']) && $v['brand_id'] == 2 && $member_level == 1) {
+                $goods_sku_list[$k]['stock'] = 0;
             }
         }
         return $this->success($goods_sku_list);

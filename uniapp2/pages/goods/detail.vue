@@ -83,7 +83,7 @@
 							<text class="tag-item">{{ goodsSkuDetail.label_name }}</text>
 						</view>
 						<view class="logistics-wrap">
-							<text v-if="goodsSkuDetail.stock_show">库存 {{ (goodsSkuDetail.brand_id == 2 && $store.state.memberInfo && $store.state.memberInfo.member_level == 1) ? 0 : goodsSkuDetail.stock }}{{goodsSkuDetail.unit}}</text>
+							<text v-if="goodsSkuDetail.stock_show">库存 {{ goodsSkuDetail.stock +goodsSkuDetail.unit}}</text>
 							<text v-if="goodsSkuDetail.sale_show">销量 {{ goodsSkuDetail.sale_num+goodsSkuDetail.unit }}</text>
 						</view>
 						<!-- 会员卡
@@ -475,7 +475,7 @@
 								:corner-mark="cartNumber > 0 ? cartNumber + '' : ''"
 								@click="goCart"
 							/>
-							<block v-if="(goodsSkuDetail.stock == 0 || (goodsSkuDetail.brand_id == 2 && $store.state.memberInfo && $store.state.memberInfo.member_level == 1)) && !goodsSkuDetail.sku_spec_format">
+							<block v-if="goodsSkuDetail.stock == 0 && !goodsSkuDetail.sku_spec_format">
 								<ns-goods-action-button class="goods-action-button active3" disabled-text="库存不足" :disabled="true" />
 								<!-- <ns-goods-action-button v-if="goodsSkuDetail.sku_spec_format" class="goods-action-button active3" disabled-text="库存不足" :disabled="true" @click="joinCart" /> -->
 								<!-- <ns-goods-action-button v-else class="goods-action-button active3" disabled-text="库存不足" :disabled="true" /> -->
