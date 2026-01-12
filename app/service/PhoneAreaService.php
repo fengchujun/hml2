@@ -1,6 +1,9 @@
 <?php
 /**
  * 手机号归属地查询服务
+ * 数据来源：https://github.com/dannyhu926/phone_location
+ * 数据更新时间：2025年03月
+ * 原始记录数：515,729条
  */
 
 namespace app\service;
@@ -8,39 +11,22 @@ namespace app\service;
 class PhoneAreaService
 {
     /**
-     * 手机号段和区号对应关系
-     * 格式：手机号前3位 => 区号（已去掉前导0）
+     * 手机号段和区号对应关系（懒加载）
+     * @var array
      */
-    private static $phoneAreaMap = [
-        // 北京 010 -> 10
-        '130' => '10', '131' => '10', '132' => '10', '145' => '10', '155' => '10',
-        '156' => '10', '185' => '10', '186' => '10',
+    private static $phoneAreaMap = null;
 
-        // 上海 021 -> 21
-        '134' => '21', '135' => '21', '136' => '21', '137' => '21', '138' => '21',
-        '139' => '21', '147' => '21', '150' => '21', '151' => '21', '152' => '21',
-        '157' => '21', '158' => '21', '159' => '21', '182' => '21', '183' => '21',
-        '187' => '21', '188' => '21',
-
-        // 深圳 0755 -> 755
-        '133' => '755', '153' => '755', '173' => '755', '177' => '755', '180' => '755',
-        '181' => '755', '189' => '755', '191' => '755', '199' => '755',
-
-        // 广州 020 -> 20
-        '160' => '20', '161' => '20', '162' => '20', '165' => '20', '166' => '20',
-        '167' => '20', '171' => '20', '175' => '20', '176' => '20', '196' => '20',
-
-        // 成都 028 -> 28
-        '140' => '28', '141' => '28', '142' => '28', '143' => '28', '144' => '28',
-        '146' => '28', '148' => '28', '170' => '28', '172' => '28', '178' => '28',
-        '190' => '28', '195' => '28', '197' => '28', '198' => '28',
-
-        // 杭州 0571 -> 571
-        '149' => '571', '174' => '571', '184' => '571', '192' => '571', '193' => '571',
-
-        // 重庆 023 -> 23
-        '163' => '23', '164' => '23', '168' => '23', '169' => '23', '194' => '23',
-    ];
+    /**
+     * 加载手机号归属地数据
+     * @return array
+     */
+    private static function loadData()
+    {
+        if (self::$phoneAreaMap === null) {
+            self::$phoneAreaMap = require __DIR__ . '/PhoneAreaData.php';
+        }
+        return self::$phoneAreaMap;
+    }
 
     /**
      * 根据手机号获取区号
@@ -53,12 +39,15 @@ class PhoneAreaService
             return '86'; // 默认返回中国区号
         }
 
+        // 加载数据
+        $areaMap = self::loadData();
+
         // 取手机号前3位
         $prefix = substr($mobile, 0, 3);
 
         // 查询映射表
-        if (isset(self::$phoneAreaMap[$prefix])) {
-            return self::$phoneAreaMap[$prefix];
+        if (isset($areaMap[$prefix])) {
+            return $areaMap[$prefix];
         }
 
         // 如果查询不到，返回默认值
@@ -66,14 +55,43 @@ class PhoneAreaService
     }
 
     /**
-     * 批量添加手机号段映射
+     * 批量添加手机号段映射（用于扩展）
      * @param string $areaCode 区号（去掉前导0）
      * @param array $prefixes 手机号前缀数组
      */
     public static function addAreaMapping($areaCode, array $prefixes)
     {
+        // 确保数据已加载
+        self::loadData();
+
         foreach ($prefixes as $prefix) {
             self::$phoneAreaMap[$prefix] = $areaCode;
         }
+    }
+
+    /**
+     * 获取所有支持的号段
+     * @return array
+     */
+    public static function getAllPrefixes()
+    {
+        return array_keys(self::loadData());
+    }
+
+    /**
+     * 检查手机号段是否在数据库中
+     * @param string $mobile 手机号
+     * @return bool
+     */
+    public static function isSupported($mobile)
+    {
+        if (empty($mobile) || strlen($mobile) < 3) {
+            return false;
+        }
+
+        $areaMap = self::loadData();
+        $prefix = substr($mobile, 0, 3);
+
+        return isset($areaMap[$prefix]);
     }
 }
