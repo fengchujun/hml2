@@ -144,6 +144,16 @@ class Register extends BaseModel
             'login_type' => $data['app_type'] ?? '',
             'login_type_name' => $data['app_type_name'] ?? '',
         ];
+
+        // 生成会员编号
+        if (!empty($data['mobile'])) {
+            $member_model = new Member();
+            $code_info = $member_model->generateMemberCode($data['site_id'], $data['mobile'], 0);
+            $data_reg['member_code'] = $code_info['member_code'];
+            $data_reg['area_code'] = $code_info['area_code'];
+            $data_reg['member_type'] = 0;
+        }
+
         $member_id = model("member")->add($data_reg);
 
         if ($member_id) {
