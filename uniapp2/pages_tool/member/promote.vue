@@ -13,29 +13,6 @@
 
 				<!-- 特邀会员专属信息 -->
 				<view v-if="memberInfo.is_vip" class="vip-info-section">
-					<!-- 保级进度 -->
-					<view class="preserve-section">
-						<view class="section-title">
-							<text class="icon">🏆</text>
-							<text>保级进度</text>
-						</view>
-						<view class="preserve-progress">
-							<view class="progress-bar">
-								<view class="progress-fill" :style="{width: preserveInfo.preserve_progress + '%'}"></view>
-							</view>
-							<view class="progress-text">
-								<text>已消费：¥{{ preserveInfo.year_consumption }}</text>
-								<text>目标：¥{{ preserveInfo.preserve_target }}</text>
-							</view>
-							<view class="progress-tip" v-if="preserveInfo.need_amount > 0">
-								还需消费 <text class="highlight">¥{{ preserveInfo.need_amount }}</text> 即可保级
-							</view>
-							<view class="progress-tip success" v-else>
-								恭喜！已达到保级标准
-							</view>
-						</view>
-					</view>
-
 					<!-- 邀请名额 -->
 					<view class="quota-section">
 						<view class="section-title">
@@ -178,12 +155,6 @@ export default {
 				available_quota: 0,
 				quota_expire_time: 0
 			},
-			preserveInfo: {
-				year_consumption: 0,
-				preserve_target: 50000,
-				preserve_progress: 0,
-				need_amount: 50000
-			},
 			stats: {
 				total_count: 0,
 				vip_member_count: 0,
@@ -222,7 +193,6 @@ export default {
 					if (res.code >= 0) {
 						this.memberInfo = res.data.member_info;
 						this.quotaInfo = res.data.quota_info;
-						this.preserveInfo = res.data.preserve_info;
 						this.stats = res.data.stats;
 						this.recommendedMembers = res.data.recommended_members || [];
 					} else {
@@ -251,7 +221,7 @@ export default {
 
 /* 头部信息卡片 */
 .header-card {
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	background: linear-gradient(135deg, #cfaf70 0%, #b8944f 100%);
 	border-radius: 20rpx;
 	padding: 40rpx;
 	color: #fff;
@@ -282,7 +252,7 @@ export default {
 	}
 
 	.vip-info-section {
-		.preserve-section, .quota-section {
+		.quota-section {
 			background: rgba(255, 255, 255, 0.15);
 			border-radius: 16rpx;
 			padding: 30rpx;
@@ -298,44 +268,6 @@ export default {
 				.icon {
 					margin-right: 10rpx;
 					font-size: 32rpx;
-				}
-			}
-		}
-
-		.preserve-progress {
-			.progress-bar {
-				height: 16rpx;
-				background: rgba(255, 255, 255, 0.3);
-				border-radius: 8rpx;
-				overflow: hidden;
-				margin-bottom: 15rpx;
-
-				.progress-fill {
-					height: 100%;
-					background: #4ade80;
-					border-radius: 8rpx;
-					transition: width 0.3s;
-				}
-			}
-
-			.progress-text {
-				display: flex;
-				justify-content: space-between;
-				font-size: 24rpx;
-				margin-bottom: 10rpx;
-			}
-
-			.progress-tip {
-				font-size: 24rpx;
-				text-align: center;
-
-				.highlight {
-					color: #FFD700;
-					font-weight: bold;
-				}
-
-				&.success {
-					color: #4ade80;
 				}
 			}
 		}
@@ -426,7 +358,7 @@ export default {
 				display: block;
 				font-size: 56rpx;
 				font-weight: bold;
-				color: #667eea;
+				color: #cfaf70;
 				margin-bottom: 10rpx;
 			}
 
@@ -501,7 +433,7 @@ export default {
 	}
 
 	.share-btn {
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		background: linear-gradient(135deg, #cfaf70 0%, #b8944f 100%);
 		color: #fff;
 		border-radius: 50rpx;
 		height: 90rpx;
