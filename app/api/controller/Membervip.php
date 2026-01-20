@@ -117,6 +117,53 @@ class Membervip extends BaseApi
     }
 
     /**
+     * 获取会员保级进度信息
+     * @return array
+     */
+    public function getPreserveInfo()
+    {
+        $token = $this->checkToken();
+        if ($token['code'] < 0) return $this->response($token);
+
+        // 获取会员基本信息
+        $member = model('member')->getInfo([
+            ['member_id', '=', $this->member_id],
+            ['site_id', '=', $this->site_id],
+            ['is_delete', '=', 0]
+        ], 'member_id, member_level, member_type, year_consumption');
+
+        if (empty($member)) {
+            return $this->response($this->error('', '会员不存在'));
+        }
+
+        // 只有特邀会员才有保级进度
+        if ($member['member_level'] != 2 && $member['member_type'] != 8) {
+            return $this->response($this->success([
+                'has_preserve' => false
+            ]));
+        }
+
+        // 计算保级进度
+        $preserve_target = 50000; // 5万元保级门槛
+        $year_consumption = floatval($member['year_consumption'] ?? 0);
+        $preserve_progress = 0;
+
+        if ($preserve_target > 0) {
+            $preserve_progress = min(100, round($year_consumption / $preserve_target * 100, 2));
+        }
+
+        $need_amount = max(0, $preserve_target - $year_consumption);
+
+        return $this->response($this->success([
+            'has_preserve' => true,
+            'year_consumption' => $year_consumption,
+            'preserve_target' => $preserve_target,
+            'preserve_progress' => $preserve_progress,
+            'need_amount' => $need_amount
+        ]));
+    }
+
+    /**
      * 生成推广小程序码（私有方法）
      * @param int $member_id 会员ID
      * @return void
