@@ -23,6 +23,6 @@ class PromotionType
      */
     public function handle()
     {
-        return ["name" => "店铺笔记", "type" => "notes"];
+        return ["name" => "会客厅", "type" => "notes"];
     }
 }

@@ -43,9 +43,9 @@ class Cart extends BaseModel
                     return $this->error('该商品仅限特邀会员购买');
                 }
 
-                // brand_id=2 不能购买
-                if ($brand_id == 2) {
-                    return $this->error('该商品暂不支持购买');
+                // brand_id=2 普通会员不能购买
+                if ($brand_id == 2 && $member_level != 2) {
+                    return $this->error('该商品已售罄');
                 }
             }
         }

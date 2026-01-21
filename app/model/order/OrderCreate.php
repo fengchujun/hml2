@@ -312,9 +312,9 @@ class OrderCreate extends BaseModel
                     if ($v['brand_id'] == 1 && $member_level != 2) {
                         $this->setError(1, '商品【' . $v['goods_name'] . '】仅限特邀会员购买');
                     }
-                    // brand_id=2 不能购买
-                    if ($v['brand_id'] == 2) {
-                        $this->setError(1, '商品【' . $v['goods_name'] . '】暂不支持购买');
+                    // brand_id=2 普通会员不能购买
+                    if ($v['brand_id'] == 2 && $member_level == 1) {
+                        $this->setError(1, '商品【' . $v['goods_name'] . '】已售罄');
                     }
                 }
 

@@ -246,7 +246,7 @@ export default {
 
 /* 头部提示 */
 .header-tip {
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	background: linear-gradient(135deg, #cfaf70 0%, #cfaf70 100%);
 	border-radius: 20rpx;
 	padding: 40rpx;
 	text-align: center;
@@ -405,7 +405,7 @@ export default {
 	}
 
 	.submit-btn {
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		background: linear-gradient(135deg, #cfaf70 0%, #cfaf70 100%);
 		color: #fff;
 		border-radius: 50rpx;
 		height: 90rpx;

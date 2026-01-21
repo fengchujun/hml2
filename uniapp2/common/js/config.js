@@ -1,9 +1,9 @@
 
 var config = {
 	// api请求地址 https://abc.com
-	baseUrl: 'https://test.ayatimes.com',
+	baseUrl: 'https://www.huamulantea.com',
 	// 图片域名 https://abc.com
-	imgDomain: 'https://test.ayatimes.com',
+	imgDomain: 'https://www.huamulantea.com',
 	// H5端域名 默认部署 https://abc.com/h5 独立部署 https://abc.com
 	h5Domain: '{{$h5Domain}}',
 	// 腾讯地图key 后台设置->其他设置->地图配置

@@ -288,8 +288,8 @@
 					</view>
 				</view>
 
-				<view class="site-wrap box member-card-wrap" v-if="paymentData.recommend_member_card && Object.keys(paymentData.recommend_member_card).length > 0">
-					<view class="head" @click="selectMemberCard">
+				<!--<view class="site-wrap box member-card-wrap" v-if="paymentData.recommend_member_card && Object.keys(paymentData.recommend_member_card).length > 0">
+					<!--<view class="head" @click="selectMemberCard">
 						<text class="iconfont icon-huiyuan"></text>
 						<view class="info">
 							开通{{ paymentData.recommend_member_card.level_name }}
@@ -306,7 +306,7 @@
 							<text class="iconfont icon-icon color-base-text price-font identify" v-if="item.key == orderCreateData.member_card_unit"></text>
 						</view>
 					</view>
-				</view>
+				</view>-->
 
 				<!-- 订单金额 -->
 				<template v-if="calculateData">

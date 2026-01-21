@@ -82,6 +82,14 @@ class Member extends BaseModel
             if(!empty($level_info)) $data['growth'] = $level_info['growth'];
         }
 
+        // 生成会员编号
+        if (!empty($data['mobile']) && empty($data['member_code'])) {
+            $code_info = $this->generateMemberCode($data['site_id'], $data['mobile'], 0);
+            $data['member_code'] = $code_info['member_code'];
+            $data['area_code'] = $code_info['area_code'];
+            $data['member_type'] = 0;
+        }
+
         $res = model('member')->add($data);
         if ($res === false) {
             return $this->error('', 'RESULT_ERROR');
@@ -1020,12 +1028,22 @@ class Member extends BaseModel
                 $save_data['member_level_type'] = $level_info[ 'level_type' ];
                 $member_code = $data[ 'member_code' ] ?? '';
                 if ($member_code) {
+                    // 如果手动指定了会员编码，检查唯一性
                     $member_count = model('member')->getInfo([ [ 'site_id', '=', $data[ 'site_id' ] ], [ 'member_code', '=', $member_code ], [ 'member_id', '<>', $data[ 'member_id' ] ] ]);
                     if ($member_count) return $this->error('', '当前会员编码已存在，请重新设置');
                     $save_data[ 'member_code' ] = $member_code;
                 }else{
-                    $member_code = $member_info[ 'mobile' ] ?: $this->memberCode(11);
-                    $save_data[ 'member_code' ] = $member_code;
+                    // 使用新的编号生成逻辑
+                    if (!empty($member_info['mobile'])) {
+                        $code_info = $this->generateMemberCode($data['site_id'], $member_info['mobile'], 0);
+                        $save_data['member_code'] = $code_info['member_code'];
+                        $save_data['area_code'] = $code_info['area_code'];
+                        $save_data['member_type'] = 0;
+                    } else {
+                        // 如果没有手机号，使用旧逻辑生成随机编号
+                        $member_code = $this->memberCode(11);
+                        $save_data[ 'member_code' ] = $member_code;
+                    }
                 }
                 model('member')->update($save_data, [
                     [ 'member_id', '=', $data[ 'member_id' ] ],
@@ -1124,5 +1142,156 @@ class Member extends BaseModel
             ]);
         }
         return $data;
+    }
+
+    /**
+     * 获取手机号归属地区号（调用阿里云API）
+     * @param string $mobile 手机号
+     * @return string 区号（已去掉前面的0），失败返回 "86"
+     */
+    private function getAreaCodeByMobile($mobile)
+    {
+        // 从配置读取 AppCode
+        $appcode = Config::get('member.mobile_location_appcode');
+
+        // 如果没有配置AppCode，直接返回默认值
+        if (empty($appcode)) {
+            return '86';
+        }
+
+        try {
+            $curl = curl_init();
+            curl_setopt_array($curl, [
+                CURLOPT_URL => "https://kzlocation.market.alicloudapi.com/api-mall/api/mobile_location/query",
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => "mobile={$mobile}",
+                CURLOPT_HTTPHEADER => [
+                    "Authorization: APPCODE {$appcode}",
+                    "Content-Type: application/x-www-form-urlencoded; charset=UTF-8"
+                ],
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_SSL_VERIFYHOST => false,
+                CURLOPT_TIMEOUT => 5, // 5秒超时
+                CURLOPT_HEADER => false
+            ]);
+
+            $response = curl_exec($curl);
+            $http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+            curl_close($curl);
+
+            if ($http_code == 200 && $response) {
+                $result = json_decode($response, true);
+
+                if ($result && $result['code'] == 200 && !empty($result['data']['areaCode'])) {
+                    // 去掉前面的0：0755 -> 755, 010 -> 10
+                    $area_code = ltrim($result['data']['areaCode'], '0');
+                    return $area_code ?: '86'; // 如果去掉0后为空，返回86
+                }
+            }
+        } catch (\Exception $e) {
+            Log::write('获取手机号归属地失败：' . $e->getMessage());
+        }
+
+        // 失败返回默认值
+        return '86';
+    }
+
+    /**
+     * 生成会员编号
+     * @param int $site_id 站点ID
+     * @param string $mobile 手机号
+     * @param int $member_type 会员类型 0普通 8特邀
+     * @return array ['member_code' => '', 'area_code' => '']
+     */
+    public function generateMemberCode($site_id, $mobile, $member_type = 0)
+    {
+        // 1. 获取区号
+        $area_code = $this->getAreaCodeByMobile($mobile);
+
+        // 2. 生成序号（带事务和行锁）
+        $seq_model = new MemberCodeSequence();
+        $current_seq = $seq_model->getNextSeq($site_id, $area_code, $member_type);
+
+        // 3. 计算序号位数（总长度至少8位）
+        $prefix_length = strlen($area_code) + 1; // 区号 + 类型（1位）
+        $seq_length = max(8 - $prefix_length, 1); // 至少1位
+
+        // 4. 组装编号
+        $member_code = $area_code . $member_type . str_pad($current_seq, $seq_length, '0', STR_PAD_LEFT);
+
+        return [
+            'member_code' => $member_code,
+            'area_code' => $area_code
+        ];
+    }
+
+    /**
+     * 升级会员为特邀会员
+     * @param int $member_id 会员ID
+     * @param int $site_id 站点ID
+     * @return array
+     */
+    public function upgradeMember($member_id, $site_id)
+    {
+        $member = model('member')->getInfo([
+            ['member_id', '=', $member_id],
+            ['site_id', '=', $site_id]
+        ], 'member_id,member_code,area_code,member_type,mobile');
+
+        if (!$member) {
+            return $this->error('', '会员不存在');
+        }
+
+        if ($member['member_type'] == 8) {
+            return $this->error('', '该会员已经是特邀会员');
+        }
+
+        model('member')->startTrans();
+        try {
+            // 1. 保存旧编号历史
+            $history_model = new MemberCodeHistory();
+            $history_model->addHistory([
+                'member_id' => $member_id,
+                'site_id' => $site_id,
+                'old_member_code' => $member['member_code'],
+                'old_member_type' => $member['member_type'],
+                'new_member_type' => 8,
+                'change_reason' => '升级为特邀会员'
+            ]);
+
+            // 2. 生成新编号（使用原有的 area_code，避免重复调用API）
+            $area_code = $member['area_code'];
+            if (empty($area_code)) {
+                // 如果没有区号，重新获取
+                $area_code = $this->getAreaCodeByMobile($member['mobile']);
+            }
+
+            $seq_model = new MemberCodeSequence();
+            $current_seq = $seq_model->getNextSeq($site_id, $area_code, 8);
+
+            $prefix_length = strlen($area_code) + 1;
+            $seq_length = max(8 - $prefix_length, 1);
+            $new_member_code = $area_code . '8' . str_pad($current_seq, $seq_length, '0', STR_PAD_LEFT);
+
+            // 3. 更新会员信息
+            model('member')->update([
+                'member_code' => $new_member_code,
+                'area_code' => $area_code,
+                'member_type' => 8
+            ], [
+                ['member_id', '=', $member_id],
+                ['site_id', '=', $site_id]
+            ]);
+
+            model('member')->commit();
+            return $this->success([
+                'old_member_code' => $member['member_code'],
+                'new_member_code' => $new_member_code
+            ]);
+        } catch (\Exception $e) {
+            model('member')->rollback();
+            return $this->error('', $e->getMessage());
+        }
     }
 }

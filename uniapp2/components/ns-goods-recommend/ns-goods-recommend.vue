@@ -24,12 +24,12 @@
 							<text class="price price-style large">{{ parseFloat(showPrice(item)).toFixed(2).split('.')[0] }}</text>
 							<text class="unit price-style small">.{{ parseFloat(showPrice(item)).toFixed(2).split('.')[1] }}</text>
 						</view>
-						<view class="member-price-tag" v-if="item.member_price && item.member_price == showPrice(item)">
+						<!--<view class="member-price-tag" v-if="item.member_price && item.member_price == showPrice(item)">
 							<image :src="$util.img('public/uniapp/index/VIP.png')" mode="widthFix"/>
 						</view>
 						<view class="member-price-tag" v-else-if="item.promotion_type == 1">
 							<image :src="$util.img('public/uniapp/index/discount.png')" mode="widthFix"/>
-						</view>
+						</view>-->
 						<view class="delete-price font-size-activity-tag color-tip price-font" v-if="showMarketPrice(item)">
 							<text class="unit">{{ $lang('common.currencySymbol') }}</text>
 							<text>{{ showMarketPrice(item) }}</text>
@@ -330,13 +330,16 @@
 			.goods-img {
 				position: relative;
 				overflow: hidden;
-				padding-top: 100%;
+				/* padding-top: 100%; */ 
+				height: 330rpx;
 				border-top-left-radius: $border-radius;
 				border-top-right-radius: $border-radius;
 
 				image {
 					width: 100%;
 					position: absolute;
+					height: 100%;
+					object-fit: cover;
 					// top: 50%;
 					top: 0;
 					bottom: 0;

@@ -29,10 +29,16 @@
 								<image :src="$util.img('public/uniapp/member/supervip_icon.png')" mode="widthFix" class="level-icon" />
 								<view class="level-name">{{ memberInfo.member_level_name }}</view>
 							</view>
-							<view class="member-level" v-if="value.style == 4 && memberInfo.member_level"
-								@click="redirectBeforeAuth(memberInfo.member_level_type ? '/pages_tool/member/card' : '/pages_tool/member/level')">
-								<image :src="$util.img('app/component/view/member_info/img/style_4_vip_tag.png')" mode="widthFix" class="level-icon" />
-								<text class="level-name">{{ memberInfo.member_level_name }}</text>
+							<view class="member-level-wrapper" v-if="value.style == 4 && memberInfo.member_level">
+								<view class="member-level"
+									@click="redirectBeforeAuth(memberInfo.member_level_type ? '/pages_tool/member/card' : '/pages_tool/member/level')">
+									<image :src="$util.img('app/component/view/member_info/img/style_4_vip_tag.png')" mode="widthFix" class="level-icon" />
+									<text class="level-name">{{ memberInfo.member_level_name }}</text>
+									<text class="arrow-down">︾</text>
+								</view>
+								<view class="member-code-display" v-if="memberInfo.member_code">
+									
+								</view>
 							</view>
 							<!-- #endif -->
 
@@ -55,10 +61,16 @@
 								<image :src="$util.img('public/uniapp/member/supervip_icon.png')" mode="widthFix" class="level-icon" />
 								<view class="level-name">{{ memberInfo.member_level_name }}</view>
 							</view>
-							<view class="member-level" v-if="value.style == 4 && memberInfo.member_level"
-								@click="redirectBeforeAuth(memberInfo.member_level_type ? '/pages_tool/member/card' : '/pages_tool/member/level')">
-								<image :src="$util.img('app/component/view/member_info/img/style_4_vip_tag.png')" mode="widthFix" class="level-icon" />
-								<text class="level-name">{{ memberInfo.member_level_name }}</text>
+							<view class="member-level-wrapper" v-if="value.style == 4 && memberInfo.member_level">
+								<view class="member-level"
+									@click="redirectBeforeAuth(memberInfo.member_level_type ? '/pages_tool/member/card' : '/pages_tool/member/level')">
+									<image :src="$util.img('app/component/view/member_info/img/style_4_vip_tag.png')" mode="widthFix" class="level-icon" />
+									<text class="level-name">{{ memberInfo.member_level_name }}</text>
+									<text class="arrow-down">︾</text>
+								</view>
+								<view class="member-code-display" v-if="memberInfo.member_code">
+									<text class="code-text">卡号 NO.{{ memberInfo.member_code }}</text>
+								</view>
 							</view>
 							<!-- #endif -->
 						</view>
@@ -121,14 +133,38 @@
 					<view class="member-info-style4" v-show="value.style == 4">
 						<view class="super-member" v-if="superMember" :style="superMemberStyle">
 							<view class="super-info" >
-								<image :src="$util.img('app/component/view/member_info/img/style_4_vip_huangguan.png')" class="title" mode="widthFix" />
-								<view  v-if="memberInfo" class="desc">您是尊贵的{{ memberInfo.member_level_name }}</view>
+							<image :src="$util.img('app/component/view/member_info/img/' + memberInfo.member_level_name + '.png')" class="title" mode="widthFix" />
+								<view  v-if="memberInfo" class="desc">您是{{ memberInfo.member_level_name }}
+								<text class="code-text" style="font-size: 28rpx; opacity: 0.8;">（ NO.{{ memberInfo.member_code }}）</text></view>
 								<view  v-else class="desc">您还未登陆</view>
 							</view>
 							<!-- <view class="super-text" :class="{ 'more' : memberInfo && memberInfo.member_level_type }">
 								<text class="see" v-if="memberInfo && memberInfo.member_level_type" @click="redirectBeforeAuth('/pages_tool/member/card')">查看更多权益</text>
 								<text class="see" v-else @click="redirectBeforeAuth('/pages_tool/member/card_buy')">立即开通</text>
 							</view> -->
+						</view>
+
+						<!-- 保级进度 - 仅特邀会员显示 -->
+						<view class="preserve-section" v-if="memberInfo && memberInfo.member_type == 8 && preserveInfo">
+							<view class="preserve-title">
+								<text class="icon">🏆</text>
+								<text>保级进度</text>
+							</view>
+							<view class="preserve-progress">
+								<view class="progress-bar">
+									<view class="progress-fill" :style="{width: preserveInfo.preserve_progress + '%'}"></view>
+								</view>
+								<view class="progress-text">
+									<text>已消费：¥{{ preserveInfo.year_consumption }}</text>
+									<text>目标：¥{{ preserveInfo.preserve_target }}</text>
+								</view>
+								<view class="progress-tip" v-if="preserveInfo.need_amount > 0">
+									还需消费 <text class="highlight">¥{{ preserveInfo.need_amount }}</text> 即可保级
+								</view>
+								<view class="progress-tip success" v-else>
+									恭喜！已达到保级标准
+								</view>
+							</view>
 						</view>
 						<view class="account-info" :style="{ 'margin-left': parseInt(value.infoMargin) * 2 + 'rpx', 'margin-right': parseInt(value.infoMargin) * 2 + 'rpx' }">
 							<view class="account-item" @click="redirect('/pages_tool/member/balance')">
@@ -290,7 +326,8 @@
 				headImg: '', // 头像保存
 				nickName: '',
 				completeInfoCallback: null,
-				menuButtonInfo: menuButtonInfo
+				menuButtonInfo: menuButtonInfo,
+				preserveInfo: null // 保级进度信息
 			};
 		},
 		options: {
@@ -401,6 +438,10 @@
 					this.getCouponNum();
 				}
 				this.getMemberCardInfo();
+				// 加载保级进度（仅特邀会员）
+				if (this.memberInfo && this.memberInfo.member_type == 8) {
+					this.getPreserveInfo();
+				}
 			},
 			/**
 			 * 查询会员信息
@@ -468,6 +509,19 @@
 					success: res => {
 						if (res.code == 0 && res.data) {
 							this.superMember = res.data;
+						}
+					}
+				});
+			},
+			/**
+			 * 查询保级进度信息
+			 */
+			getPreserveInfo() {
+				this.$api.sendRequest({
+					url: '/api/membervip/getPromoteStats',
+					success: res => {
+						if (res.code >= 0 && res.data) {
+							this.preserveInfo = res.data.preserve_info;
 						}
 					}
 				});
@@ -1118,24 +1172,49 @@
 			font-size: 36rpx;
 		}
 
-		.member-level {
-			background: #474758;
-			padding: 0;
+		.member-level-wrapper {
 			margin: 10rpx 0 0;
-			height: auto;
-			border-radius: 10px;
+			display: flex;
+			flex-direction: column;
+			align-items: flex-start;
 
-			.level-icon {
-				width: 40rpx;
+			.member-level {
+				background: #474758;
+				padding: 0;
 				height: auto;
-				vertical-align: middle;
-				will-change: transform;
+				border-radius: 10px;
+				display: flex;
+				align-items: center;
+
+				.level-icon {
+					width: 40rpx;
+					height: auto;
+					vertical-align: middle;
+					will-change: transform;
+				}
+
+				.level-name {
+					padding: 0 6rpx 0 6rpx;
+					color: #ddc095;
+					font-size: 24rpx;
+				}
+
+				.arrow-down {
+					padding: 0 10rpx 0 0;
+					color: #ddc095;
+					font-size: 20rpx;
+					opacity: 0.8;
+				}
 			}
 
-			.level-name {
-				padding: 0 20rpx 0 6rpx;
-				color: #ddc095;
-				font-size: 24rpx;
+			.member-code-display {
+				margin-top: 8rpx;
+				font-size: 22rpx;
+				color: rgba(255, 255, 255, 0.8);
+
+				.code-text {
+					letter-spacing: 1rpx;
+				}
 			}
 		}
 
@@ -1255,6 +1334,70 @@
 					image {
 						width: 40rpx;
 						height: 40rpx;
+					}
+				}
+			}
+
+			/* 保级进度样式 */
+			.preserve-section {
+				background: rgba(207, 175, 112, 0.1);
+				border: 1rpx solid #cfaf70;
+				border-radius: 16rpx;
+				padding: 20rpx;
+				margin: 20rpx 24rpx;
+
+				.preserve-title {
+					display: flex;
+					align-items: center;
+					font-size: 28rpx;
+					font-weight: bold;
+					margin-bottom: 20rpx;
+					color: #333;
+
+					.icon {
+						margin-right: 10rpx;
+						font-size: 32rpx;
+					}
+				}
+
+				.preserve-progress {
+					.progress-bar {
+						height: 16rpx;
+						background: rgba(207, 175, 112, 0.2);
+						border-radius: 8rpx;
+						overflow: hidden;
+						margin-bottom: 15rpx;
+
+						.progress-fill {
+							height: 100%;
+							background: #cfaf70;
+							border-radius: 8rpx;
+							transition: width 0.3s;
+						}
+					}
+
+					.progress-text {
+						display: flex;
+						justify-content: space-between;
+						font-size: 24rpx;
+						color: #666;
+						margin-bottom: 10rpx;
+					}
+
+					.progress-tip {
+						font-size: 24rpx;
+						text-align: center;
+						color: #666;
+						margin-top: 10rpx;
+
+						.highlight {
+							color: #cfaf70;
+							font-weight: bold;
+						}
+
+						&.success {
+							color: #4ade80;
+						}
 					}
 				}
 			}

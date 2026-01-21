@@ -249,8 +249,19 @@ class MemberVip extends BaseModel
                 ['application_id', '=', $application_id]
             ]);
 
-            // 4. 升级会员等级为特邀会员
+            // 4. 升级会员等级为特邀会员并生成新的会员编号
             $expire_time = strtotime(date('Y-12-31 23:59:59')); // 当年最后一秒
+
+            // 先调用 Member 模型的 upgradeMember 方法，生成特邀会员编号
+            $member_model = new Member();
+            $upgrade_result = $member_model->upgradeMember($application['member_id'], $site_id);
+
+            // 如果编号生成失败，记录日志但不阻塞流程
+            if ($upgrade_result['code'] < 0) {
+                \think\facade\Log::write('特邀会员编号生成失败：' . $upgrade_result['message']);
+            }
+
+            // 更新会员等级信息
             model('member')->update([
                 'member_level' => 2,
                 'member_level_name' => '特邀会员',

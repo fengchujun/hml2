@@ -8,15 +8,16 @@
 		</view>
 		<!-- #endif -->
 
-		<!--<scroll-view class="catrgory-nav" scroll-x="true" :scroll-left="scrollLeft" :show-scrollbar="false" scroll-with-animation="true">
-			<view class="navs">
-				<view v-for="(categoryItem, categoryIndex) in categoryList" :key="categoryIndex" class="uni-tab-item" :id="categoryItem.category_id" :data-current="categoryIndex" @click="ontabtap">
-					<text class="uni-tab-item-title" :class="categoryItem.category_id == categoryId ? 'uni-tab-item-title-active color-base-text' : ''">
-						{{ categoryItem.category_name }}
-					</text>
-				</view>
-			</view>
-		</scroll-view>-->
+		<scroll-view class="catrgory-nav" scroll-x="true" :scroll-left="scrollLeft" :show-scrollbar="false" scroll-with-animation="true">
+<view class="navs" style="display: flex; justify-content: flex-start; padding-left: 20rpx;">
+	<view class="uni-tab-item" :id="currentCategory.category_id">
+		<text class="uni-tab-item-title uni-tab-item-title-active color-base-text">
+			全部文章
+		</text>
+	</view>
+</view>
+
+		</scroll-view>
 		<!-- #ifdef MP -->
 		<mescroll-uni ref="mescroll" @getData="getData" top="80rpx" >
 		<!-- #endif -->

@@ -101,7 +101,7 @@ class Config extends BaseApi
     $diy_view = new DiyViewModel();
 //var_dump($member_level);
     // 根据用户标签返回不同的主题配置
-    if ($member_level == '2') {
+    if ($member_level == '112') {
         // member_label = 1 的用户，使用商务蓝主题
         $theme_model = new \app\model\diy\Theme();
 $theme_result = $theme_model->getThemeInfo([['name', '=', 'black']], 'id,title,name,main_color,aux_color');

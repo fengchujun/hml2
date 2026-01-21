@@ -30,9 +30,9 @@ class ShowPromotion
                     //店铺端展示分类  shop:营销活动   member:互动营销
                     'show_type' => 'tool',
                     //展示主题
-                    'title' => '店铺笔记',
+                    'title' => '会客厅',
                     //展示介绍
-                    'description' => '好物分享引流促成交易',
+                    'description' => '会客厅',
                     //展示图标
                     'icon' => 'addon/notes/icon.png',
                     //跳转链接

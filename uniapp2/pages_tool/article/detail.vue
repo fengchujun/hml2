@@ -133,7 +133,7 @@
 	}
 
 	.help-content {
-		margin-top: $margin-updown;
+		margin-top: 10rpx;
 		word-break: break-all;
 	}
 
@@ -162,4 +162,7 @@
 			font-size: 24rpx;
 		}
 	}
+	._img  {
+			margin-top: -20rpx;
+		}
 </style>
