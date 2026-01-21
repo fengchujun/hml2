@@ -57,6 +57,14 @@ class OrderCreate extends BaseModel
             $order_insert_data[ 'order_type_name' ] = $this->order_type[ 'order_type_name' ];
             $order_insert_data[ 'order_status_name' ] = $this->order_type[ 'order_status' ][ 'name' ];
             $order_insert_data[ 'order_status_action' ] = json_encode($this->order_type[ 'order_status' ], JSON_UNESCAPED_UNICODE);
+
+            // 计算分销佣金和关联仓库
+            $commission_data = $this->calculateDistributionCommission();
+            $order_insert_data[ 'distributor_id' ] = $commission_data['distributor_id'];
+            $order_insert_data[ 'commission_amount' ] = $commission_data['commission_amount'];
+            $order_insert_data[ 'commission_settled' ] = 0;
+            $order_insert_data[ 'warehouse_id' ] = $commission_data['warehouse_id'];
+
             $this->order_id = model('order')->add($order_insert_data);
 
 
@@ -308,13 +316,21 @@ class OrderCreate extends BaseModel
             foreach ($this->goods_list as $k => &$v) {
                 // 检查商品购买权限
                 if (isset($v['brand_id'])) {
-                    // brand_id=1 只有特邀会员(member_level=2)可以购买
-                    if ($v['brand_id'] == 1 && $member_level != 2) {
-                        $this->setError(1, '商品【' . $v['goods_name'] . '】仅限特邀会员购买');
+                    // brand_id=1 只有特邀会员(member_level=2)或分销员(member_level=6)可以购买
+                    if ($v['brand_id'] == 1 && !in_array($member_level, [2, 6])) {
+                        // 检查是否通过分销链接访问过该商品（获得永久权限）
+                        $has_permission = model('member_source_goods')->checkPermission($this->member_id, $v['goods_id']);
+                        if (!$has_permission) {
+                            $this->setError(1, '商品【' . $v['goods_name'] . '】仅限特邀会员购买');
+                        }
                     }
-                    // brand_id=2 普通会员不能购买
+                    // brand_id=2 普通会员不能购买（除非通过分销链接访问过）
                     if ($v['brand_id'] == 2 && $member_level == 1) {
-                        $this->setError(1, '商品【' . $v['goods_name'] . '】已售罄');
+                        // 检查是否通过分销链接访问过该商品
+                        $has_permission = model('member_source_goods')->checkPermission($this->member_id, $v['goods_id']);
+                        if (!$has_permission) {
+                            $this->setError(1, '商品【' . $v['goods_name'] . '】已售罄');
+                        }
                     }
                 }
 
@@ -447,6 +463,53 @@ class OrderCreate extends BaseModel
         $this->pay_money = $this->order_money;
 
         return true;
+    }
+
+    /**
+     * 计算分销佣金和关联仓库
+     * @return array
+     */
+    public function calculateDistributionCommission()
+    {
+        $total_commission = 0;
+        $distributor_id = 0;
+        $warehouse_id = 0;
+
+        try {
+            foreach ($this->goods_list as $goods) {
+                // 检查该商品是否通过分销员访问
+                $record = model('member_source_goods')->getRecord($this->member_id, $goods['goods_id']);
+
+                if ($record) {
+                    $distributor_id = $record['distributor_id'];
+                    $fx_level = $record['distributor_level'];
+
+                    // 获取商品的佣金配置
+                    $commission_field = 'fx_level' . $fx_level . '_commission';
+                    $goods_info = model('goods')->getInfo([['goods_id', '=', $goods['goods_id']]], $commission_field);
+
+                    if ($goods_info && isset($goods_info[$commission_field]) && $goods_info[$commission_field] > 0) {
+                        // 佣金 = 单品佣金 × 数量
+                        $total_commission += $goods_info[$commission_field] * $goods['num'];
+                    }
+                }
+            }
+
+            // 如果订单来自分销员推荐，获取分销员的仓库ID
+            if ($distributor_id > 0) {
+                $distributor = model('member')->getInfo([['member_id', '=', $distributor_id]], 'warehouse_id');
+                $warehouse_id = $distributor['warehouse_id'] ?? 0;
+            }
+
+        } catch (\Exception $e) {
+            \think\facade\Log::error('计算分销佣金失败: ' . $e->getMessage());
+        }
+
+        return [
+            'distributor_id' => $distributor_id,
+            'commission_amount' => $total_commission,
+            'warehouse_id' => $warehouse_id
+        ];
     }
 
 

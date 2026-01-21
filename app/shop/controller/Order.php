@@ -127,6 +127,13 @@ class Order extends BaseShop
             if ($pay_type != '') {
                 $condition[] = [ 'a.pay_type', '=', $pay_type ];
             }
+
+            // 仓库过滤：如果管理员配置了仓库ID，只显示该仓库的订单
+            $admin_info = model('user')->getInfo([['uid', '=', $this->uid]], 'warehouse_id');
+            if ($admin_info && $admin_info['warehouse_id'] > 0) {
+                $condition[] = [ 'a.warehouse_id', '=', $admin_info['warehouse_id'] ];
+            }
+
             //订单类型
             if ($order_type != 'all') {
                 $condition[] = [ 'a.order_type', '=', $order_type ];

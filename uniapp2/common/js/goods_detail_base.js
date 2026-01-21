@@ -62,6 +62,26 @@ export default {
 			this.$util.onSourceMember(uni.getStorageSync('source_member'));
 		}
 
+		// 处理分销商品信息（模仿source_member的处理方式）
+		if (data.source_member && (this.skuId || data.sku_id)) {
+			// 保存分销商品信息到本地缓存
+			let goods_id = this.goodsId || data.goods_id || 0;
+			if (!goods_id && (this.skuId || data.sku_id)) {
+				// 如果没有goods_id，从sku_id推导（在后面获取商品详情后会有）
+				goods_id = 0; // 暂时设为0，等获取详情后更新
+			}
+			uni.setStorageSync('fx_goods_info', {
+				goods_id: goods_id,
+				distributor_id: data.source_member,
+				timestamp: Date.now()
+			});
+
+			// 如果已登录，调用后端处理分销商品访问
+			if (this.storeToken && goods_id > 0) {
+				this.handleDistributorGoodsVisit(data.source_member, goods_id);
+			}
+		}
+
 		// 小程序扫码进入
 		if (data.scene) {
 			var sceneParams = decodeURIComponent(data.scene);
@@ -334,6 +354,26 @@ export default {
 				},
 				success: res => {
 					if (res.code == 0 && res.data) this.$set(this.goodsSkuDetail, 'goods_form', res.data);
+				}
+			});
+		},
+		/**
+		 * 处理分销商品访问（用户点击分销链接访问商品时调用）
+		 */
+		handleDistributorGoodsVisit(distributor_id, goods_id) {
+			this.$api.sendRequest({
+				url: '/api/goods/handleDistributorVisit',
+				data: {
+					distributor_id: distributor_id,
+					goods_id: goods_id
+				},
+				success: res => {
+					// 处理成功，可能返回已发放的优惠券信息
+					if (res.code >= 0 && res.data && res.data.coupon_sent) {
+						this.$util.showToast({
+							title: '已获得优惠券'
+						});
+					}
 				}
 			});
 		}

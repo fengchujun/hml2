@@ -265,6 +265,11 @@
 				}
 				if (uni.getStorageSync('source_member')) data.source_member = uni.getStorageSync('source_member');
 
+				// 发送分销商品信息
+				if (uni.getStorageSync('fx_goods_info')) {
+					data.fx_goods_info = JSON.stringify(uni.getStorageSync('fx_goods_info'));
+				}
+
 				if (this.verify(data)) {
 					if (this.isSub) return;
 					this.isSub = true;

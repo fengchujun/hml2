@@ -189,6 +189,30 @@ class Register extends BaseModel
                 }
                 $coupon_model->giveCoupon($coupon_data, $data['site_id'], $member_id, Coupon::GET_TYPE_ACTIVITY_GIVE);
             }
+
+            // 处理分销商品信息（从前端传入）
+            if (isset($data['fx_goods_info'])) {
+                $fx_goods_info = is_string($data['fx_goods_info']) ? json_decode($data['fx_goods_info'], true) : $data['fx_goods_info'];
+                if ($fx_goods_info && isset($fx_goods_info['goods_id']) && isset($fx_goods_info['distributor_id'])) {
+                    // 创建商品访问记录
+                    model('member_source_goods')->createRecordOnRegister(
+                        $member_id,
+                        $fx_goods_info['goods_id'],
+                        $fx_goods_info['distributor_id'],
+                        $data['site_id']
+                    );
+                    // 发放首次优惠券
+                    $distributor = model('member')->getInfo([['member_id', '=', $fx_goods_info['distributor_id']]], 'fx_level');
+                    if ($distributor) {
+                        model('member_source_goods')->sendFirstCoupon(
+                            $member_id,
+                            $fx_goods_info['goods_id'],
+                            $distributor['fx_level']
+                        );
+                    }
+                }
+            }
+
             //会员注册成功后续事件
             Queue::push('app\job\MemberRegisterAfter', $data_reg);
 

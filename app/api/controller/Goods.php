@@ -129,4 +129,87 @@ class Goods extends BaseApi
         $res = $poster->shareImg($this->params[ 'page' ] ?? '', $qrcode_param, $this->site_id, $this->store_id);
         return $this->response($res);
     }
+
+    /**
+     * 处理分销商品访问（用户点击分销链接访问商品时调用）
+     * @return false|string
+     */
+    public function handleDistributorVisit()
+    {
+        // 需要登录
+        $token = $this->checkToken();
+        if ($token['code'] < 0) {
+            return $this->response($token);
+        }
+
+        $distributor_id = $this->params['distributor_id'] ?? 0;
+        $goods_id = $this->params['goods_id'] ?? 0;
+
+        if (!$distributor_id || !$goods_id) {
+            return $this->response($this->error('', '参数错误'));
+        }
+
+        try {
+            // 1. 检查分销员是否是 member_level=6
+            $distributor = model('member')->getInfo([['member_id', '=', $distributor_id]], 'member_level,fx_level');
+            if (!$distributor || $distributor['member_level'] != 6) {
+                return $this->response($this->error('', '无效的分销链接'));
+            }
+
+            // 2. 检查是否已经有推荐人
+            $member = model('member')->getInfo([['member_id', '=', $this->member_id]], 'source_member');
+
+            // 如果该用户已经有推荐人，且推荐人不是当前分销员，不做任何操作
+            if ($member['source_member'] != 0 && $member['source_member'] != $distributor_id) {
+                return $this->response($this->success('', ''));
+            }
+
+            // 3. 如果没有推荐人，设置推荐人
+            if ($member['source_member'] == 0) {
+                model('member')->update([
+                    'source_member' => $distributor_id
+                ], [['member_id', '=', $this->member_id]]);
+            }
+
+            // 4. 查询或创建商品访问记录
+            $record = model('member_source_goods')->getRecord($this->member_id, $goods_id);
+
+            if (!$record) {
+                // 首次访问，创建记录并发放首次优惠券
+                model('member_source_goods')->createRecord(
+                    $this->member_id,
+                    $goods_id,
+                    $distributor_id,
+                    $distributor['fx_level'],
+                    $this->site_id
+                );
+                $coupon_sent = model('member_source_goods')->sendFirstCoupon(
+                    $this->member_id,
+                    $goods_id,
+                    $distributor['fx_level']
+                );
+                return $this->response($this->success(['coupon_sent' => $coupon_sent], ''));
+            } else {
+                // 已访问过，检查优惠券是否可用
+                $need_resend = model('member_source_goods')->checkCouponExpired(
+                    $this->member_id,
+                    $goods_id,
+                    $distributor['fx_level']
+                );
+                if ($need_resend) {
+                    $coupon_sent = model('member_source_goods')->sendFirstCoupon(
+                        $this->member_id,
+                        $goods_id,
+                        $distributor['fx_level']
+                    );
+                    return $this->response($this->success(['coupon_sent' => $coupon_sent], ''));
+                }
+            }
+
+            return $this->response($this->success('', ''));
+
+        } catch (\Exception $e) {
+            return $this->response($this->error('', $e->getMessage()));
+        }
+    }
 }

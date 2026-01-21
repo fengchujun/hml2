@@ -56,9 +56,45 @@ class OrderComplete
                 }
             }
 
+            // 发放分销完成优惠券
+            $this->sendDistributionCompleteCoupon($data['order_id'], $member_id);
+
         }
 
         return $order_model->success();
+    }
+
+    /**
+     * 发放分销完成优惠券
+     * @param int $order_id 订单ID
+     * @param int $member_id 会员ID
+     */
+    private function sendDistributionCompleteCoupon($order_id, $member_id)
+    {
+        try {
+            // 查询订单商品
+            $order_goods_list = model('order_goods')->where([['order_id', '=', $order_id]])->select();
+
+            if (!$order_goods_list) {
+                return;
+            }
+
+            foreach ($order_goods_list as $goods) {
+                // 检查该商品是否有分销记录
+                $record = model('member_source_goods')->getRecord($member_id, $goods['goods_id']);
+
+                if ($record) {
+                    // 发放完成优惠券
+                    model('member_source_goods')->sendCompleteCoupon(
+                        $member_id,
+                        $goods['goods_id'],
+                        $record['distributor_level']
+                    );
+                }
+            }
+        } catch (\Exception $e) {
+            \think\facade\Log::error('发放分销完成优惠券失败: ' . $e->getMessage());
+        }
     }
 
 }
