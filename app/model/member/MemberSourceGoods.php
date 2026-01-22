@@ -11,14 +11,17 @@
 namespace app\model\member;
 
 use app\model\BaseModel;
+use app\model\Model;
 use think\facade\Db;
 use think\facade\Log;
 
 /**
  * 会员分销商品访问记录管理
  */
-class MemberSourceGoods extends BaseModel
+class MemberSourceGoods extends Model
 {
+    protected $table = 'member_source_goods';
+
     /**
      * 获取会员对某商品的访问记录
      * @param int $member_id 会员ID
@@ -27,12 +30,12 @@ class MemberSourceGoods extends BaseModel
      */
     public function getRecord($member_id, $goods_id)
     {
-        $record = $this->where([
+        $record = $this->getInfo([
             ['member_id', '=', $member_id],
             ['goods_id', '=', $goods_id]
-        ])->find();
+        ]);
 
-        return $record ? $record->toArray() : null;
+        return $record;
     }
 
     /**
@@ -43,10 +46,10 @@ class MemberSourceGoods extends BaseModel
      */
     public function checkPermission($member_id, $goods_id)
     {
-        $count = $this->where([
+        $count = $this->getCount([
             ['member_id', '=', $member_id],
             ['goods_id', '=', $goods_id]
-        ])->count();
+        ]);
 
         return $count > 0;
     }
@@ -66,11 +69,11 @@ class MemberSourceGoods extends BaseModel
         $exists = $this->getRecord($member_id, $goods_id);
         if ($exists) {
             // 更新最后访问时间
-            return $this->where([
+            return $this->update([
+                'last_visit_time' => time()
+            ], [
                 ['member_id', '=', $member_id],
                 ['goods_id', '=', $goods_id]
-            ])->update([
-                'last_visit_time' => time()
             ]);
         }
 
@@ -85,7 +88,7 @@ class MemberSourceGoods extends BaseModel
             'create_time' => time()
         ];
 
-        return $this->insert($data);
+        return $this->add($data);
     }
 
     /**
@@ -142,11 +145,11 @@ class MemberSourceGoods extends BaseModel
                 ]);
 
                 // 更新发放时间
-                $this->where([
+                $this->update([
+                    'first_coupon_last_time' => time()
+                ], [
                     ['member_id', '=', $member_id],
                     ['goods_id', '=', $goods_id]
-                ])->update([
-                    'first_coupon_last_time' => time()
                 ]);
 
                 return $result !== false;
@@ -226,18 +229,15 @@ class MemberSourceGoods extends BaseModel
             }
 
             // 检查会员账户中该优惠券是否可用
-            if (class_exists('\addon\coupon\model\MemberCoupon')) {
-                $member_coupon_model = new \addon\coupon\model\MemberCoupon();
-                $available_coupon = $member_coupon_model->where([
-                    ['member_id', '=', $member_id],
-                    ['coupon_type_id', '=', $coupon_type_id],
-                    ['state', '=', 1], // 未使用
-                    ['end_time', '>', time()] // 未过期
-                ])->find();
+            $available_coupon = Db::name('member_coupon')->where([
+                ['member_id', '=', $member_id],
+                ['coupon_type_id', '=', $coupon_type_id],
+                ['state', '=', 1], // 未使用
+                ['end_time', '>', time()] // 未过期
+            ])->find();
 
-                // 如果没有可用优惠券，需要重新发放
-                return empty($available_coupon);
-            }
+            // 如果没有可用优惠券，需要重新发放
+            return empty($available_coupon);
 
             return false;
         } catch (\Exception $e) {
@@ -253,9 +253,9 @@ class MemberSourceGoods extends BaseModel
      */
     public function getMemberGoodsList($member_id)
     {
-        return $this->where([
+        return $this->getList([
             ['member_id', '=', $member_id]
-        ])->select()->toArray();
+        ]);
     }
 
     /**
@@ -265,8 +265,8 @@ class MemberSourceGoods extends BaseModel
      */
     public function getDistributorRecords($distributor_id)
     {
-        return $this->where([
+        return $this->getList([
             ['distributor_id', '=', $distributor_id]
-        ])->select()->toArray();
+        ]);
     }
 }
