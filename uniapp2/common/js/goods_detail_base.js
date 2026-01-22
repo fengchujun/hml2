@@ -63,23 +63,22 @@ export default {
 		}
 
 		// 处理分销商品信息（模仿source_member的处理方式）
-		if (data.source_member && (this.skuId || data.sku_id)) {
-			// 保存分销商品信息到本地缓存
+		if (data.source_member) {
+			// 尝试获取 goods_id，可能暂时为 0
 			let goods_id = this.goodsId || data.goods_id || 0;
-			if (!goods_id && (this.skuId || data.sku_id)) {
-				// 如果没有goods_id，从sku_id推导（在后面获取商品详情后会有）
-				goods_id = 0; // 暂时设为0，等获取详情后更新
-			}
+
+			// 先缓存分销信息，即使 goods_id 暂时为 0
 			uni.setStorageSync('fx_goods_info', {
 				goods_id: goods_id,
 				distributor_id: data.source_member,
 				timestamp: Date.now()
 			});
 
-			// 如果已登录，调用后端处理分销商品访问
+			// 如果已登录且有 goods_id，立即调用后端处理分销商品访问
 			if (this.storeToken && goods_id > 0) {
 				this.handleDistributorGoodsVisit(data.source_member, goods_id);
 			}
+			// 如果 goods_id 为 0，会在 handleGoodsSkuData 中更新并调用 API
 		}
 
 		// 小程序扫码进入
@@ -109,6 +108,21 @@ export default {
 			}
 
 			this.whetherCollection = this.goodsSkuDetail.is_collect; // 用户关注商品状态
+
+			// 处理分销商品信息：如果缓存中 goods_id 为 0，现在更新它
+			let fx_goods_info = uni.getStorageSync('fx_goods_info');
+			if (fx_goods_info && fx_goods_info.distributor_id && this.goodsSkuDetail.goods_id) {
+				// 如果缓存的 goods_id 是 0 或与当前不一致，更新它
+				if (fx_goods_info.goods_id == 0 || fx_goods_info.goods_id != this.goodsSkuDetail.goods_id) {
+					fx_goods_info.goods_id = this.goodsSkuDetail.goods_id;
+					uni.setStorageSync('fx_goods_info', fx_goods_info);
+
+					// 如果已登录，调用 API 处理分销访问
+					if (this.storeToken) {
+						this.handleDistributorGoodsVisit(fx_goods_info.distributor_id, this.goodsSkuDetail.goods_id);
+					}
+				}
+			}
 
 			this.modifyGoodsInfo();
 

@@ -138,11 +138,13 @@ class MemberSourceGoods extends Model
             // 发放优惠券（使用优惠券插件的发放逻辑）
             if (class_exists('\addon\coupon\model\Coupon')) {
                 $coupon_model = new \addon\coupon\model\Coupon();
-                $result = $coupon_model->giveCoupon([
-                    'member_id' => $member_id,
-                    'coupon_type_id' => $coupon_type_id,
-                    'get_type' => 'distribution' // 分销赠送
-                ]);
+                // 获取 site_id
+                $site_id = request()->siteId();
+                // 按照 Register.php 中的调用方式：giveCoupon($coupon_data, $site_id, $member_id, $get_type)
+                $coupon_data = [
+                    ['coupon_type_id' => $coupon_type_id, 'num' => 1]
+                ];
+                $result = $coupon_model->giveCoupon($coupon_data, $site_id, $member_id, \addon\coupon\model\Coupon::GET_TYPE_ACTIVITY_GIVE);
 
                 // 更新发放时间
                 $this->update([
@@ -189,11 +191,13 @@ class MemberSourceGoods extends Model
             // 发放优惠券
             if (class_exists('\addon\coupon\model\Coupon')) {
                 $coupon_model = new \addon\coupon\model\Coupon();
-                $result = $coupon_model->giveCoupon([
-                    'member_id' => $member_id,
-                    'coupon_type_id' => $coupon_type_id,
-                    'get_type' => 'distribution_complete' // 分销完成赠送
-                ]);
+                // 获取 site_id
+                $site_id = request()->siteId();
+                // 按照 Register.php 中的调用方式
+                $coupon_data = [
+                    ['coupon_type_id' => $coupon_type_id, 'num' => 1]
+                ];
+                $result = $coupon_model->giveCoupon($coupon_data, $site_id, $member_id, \addon\coupon\model\Coupon::GET_TYPE_ACTIVITY_GIVE);
 
                 return $result !== false;
             }
