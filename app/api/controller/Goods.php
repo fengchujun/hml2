@@ -172,18 +172,19 @@ class Goods extends BaseApi
             }
 
             // 4. 查询或创建商品访问记录
-            $record = model('member_source_goods')->getRecord($this->member_id, $goods_id);
+            $member_source_goods_model = new \app\model\member\MemberSourceGoods();
+            $record = $member_source_goods_model->getRecord($this->member_id, $goods_id);
 
             if (!$record) {
                 // 首次访问，创建记录并发放首次优惠券
-                model('member_source_goods')->createRecord(
+                $member_source_goods_model->createRecord(
                     $this->member_id,
                     $goods_id,
                     $distributor_id,
                     $distributor['fx_level'],
                     $this->site_id
                 );
-                $coupon_sent = model('member_source_goods')->sendFirstCoupon(
+                $coupon_sent = $member_source_goods_model->sendFirstCoupon(
                     $this->member_id,
                     $goods_id,
                     $distributor['fx_level']
@@ -191,13 +192,13 @@ class Goods extends BaseApi
                 return $this->response($this->success(['coupon_sent' => $coupon_sent], ''));
             } else {
                 // 已访问过，检查优惠券是否可用
-                $need_resend = model('member_source_goods')->checkCouponExpired(
+                $need_resend = $member_source_goods_model->checkCouponExpired(
                     $this->member_id,
                     $goods_id,
                     $distributor['fx_level']
                 );
                 if ($need_resend) {
-                    $coupon_sent = model('member_source_goods')->sendFirstCoupon(
+                    $coupon_sent = $member_source_goods_model->sendFirstCoupon(
                         $this->member_id,
                         $goods_id,
                         $distributor['fx_level']

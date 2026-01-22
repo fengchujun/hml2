@@ -79,13 +79,14 @@ class OrderComplete
                 return;
             }
 
+            $member_source_goods_model = new \app\model\member\MemberSourceGoods();
             foreach ($order_goods_list as $goods) {
                 // 检查该商品是否有分销记录
-                $record = model('member_source_goods')->getRecord($member_id, $goods['goods_id']);
+                $record = $member_source_goods_model->getRecord($member_id, $goods['goods_id']);
 
                 if ($record) {
                     // 发放完成优惠券
-                    model('member_source_goods')->sendCompleteCoupon(
+                    $member_source_goods_model->sendCompleteCoupon(
                         $member_id,
                         $goods['goods_id'],
                         $record['distributor_level']

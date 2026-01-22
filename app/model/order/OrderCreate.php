@@ -319,7 +319,8 @@ class OrderCreate extends BaseModel
                     // brand_id=1 只有特邀会员(member_level=2)或分销员(member_level=6)可以购买
                     if ($v['brand_id'] == 1 && !in_array($member_level, [2, 6])) {
                         // 检查是否通过分销链接访问过该商品（获得永久权限）
-                        $has_permission = model('member_source_goods')->checkPermission($this->member_id, $v['goods_id']);
+                        $member_source_goods_model = new \app\model\member\MemberSourceGoods();
+                        $has_permission = $member_source_goods_model->checkPermission($this->member_id, $v['goods_id']);
                         if (!$has_permission) {
                             $this->setError(1, '商品【' . $v['goods_name'] . '】仅限特邀会员购买');
                         }
@@ -327,7 +328,8 @@ class OrderCreate extends BaseModel
                     // brand_id=2 普通会员不能购买（除非通过分销链接访问过）
                     if ($v['brand_id'] == 2 && $member_level == 1) {
                         // 检查是否通过分销链接访问过该商品
-                        $has_permission = model('member_source_goods')->checkPermission($this->member_id, $v['goods_id']);
+                        $member_source_goods_model = new \app\model\member\MemberSourceGoods();
+                        $has_permission = $member_source_goods_model->checkPermission($this->member_id, $v['goods_id']);
                         if (!$has_permission) {
                             $this->setError(1, '商品【' . $v['goods_name'] . '】已售罄');
                         }
@@ -476,9 +478,10 @@ class OrderCreate extends BaseModel
         $warehouse_id = 0;
 
         try {
+            $member_source_goods_model = new \app\model\member\MemberSourceGoods();
             foreach ($this->goods_list as $goods) {
                 // 检查该商品是否通过分销员访问
-                $record = model('member_source_goods')->getRecord($this->member_id, $goods['goods_id']);
+                $record = $member_source_goods_model->getRecord($this->member_id, $goods['goods_id']);
 
                 if ($record) {
                     $distributor_id = $record['distributor_id'];

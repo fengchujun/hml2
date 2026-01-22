@@ -195,7 +195,8 @@ class Register extends BaseModel
                 $fx_goods_info = is_string($data['fx_goods_info']) ? json_decode($data['fx_goods_info'], true) : $data['fx_goods_info'];
                 if ($fx_goods_info && isset($fx_goods_info['goods_id']) && isset($fx_goods_info['distributor_id'])) {
                     // 创建商品访问记录
-                    model('member_source_goods')->createRecordOnRegister(
+                    $member_source_goods_model = new \app\model\member\MemberSourceGoods();
+                    $member_source_goods_model->createRecordOnRegister(
                         $member_id,
                         $fx_goods_info['goods_id'],
                         $fx_goods_info['distributor_id'],
@@ -204,7 +205,7 @@ class Register extends BaseModel
                     // 发放首次优惠券
                     $distributor = model('member')->getInfo([['member_id', '=', $fx_goods_info['distributor_id']]], 'fx_level');
                     if ($distributor) {
-                        model('member_source_goods')->sendFirstCoupon(
+                        $member_source_goods_model->sendFirstCoupon(
                             $member_id,
                             $fx_goods_info['goods_id'],
                             $distributor['fx_level']
