@@ -191,26 +191,38 @@ class Register extends BaseModel
             }
 
             // 处理分销商品信息（从前端传入）
+            \think\facade\Log::write('Register - 检查分销商品信息: isset='.isset($data['fx_goods_info']));
             if (isset($data['fx_goods_info'])) {
+                \think\facade\Log::write('Register - fx_goods_info原始数据: '.json_encode($data['fx_goods_info']));
                 $fx_goods_info = is_string($data['fx_goods_info']) ? json_decode($data['fx_goods_info'], true) : $data['fx_goods_info'];
+                \think\facade\Log::write('Register - fx_goods_info解析后: '.json_encode($fx_goods_info));
                 if ($fx_goods_info && isset($fx_goods_info['goods_id']) && isset($fx_goods_info['distributor_id'])) {
+                    \think\facade\Log::write('Register - 准备创建分销商品访问记录: member_id='.$member_id.', goods_id='.$fx_goods_info['goods_id'].', distributor_id='.$fx_goods_info['distributor_id']);
                     // 创建商品访问记录
                     $member_source_goods_model = new \app\model\member\MemberSourceGoods();
-                    $member_source_goods_model->createRecordOnRegister(
+                    $create_result = $member_source_goods_model->createRecordOnRegister(
                         $member_id,
                         $fx_goods_info['goods_id'],
                         $fx_goods_info['distributor_id'],
                         $data['site_id']
                     );
+                    \think\facade\Log::write('Register - 创建记录结果: '.json_encode($create_result));
                     // 发放首次优惠券
                     $distributor = model('member')->getInfo([['member_id', '=', $fx_goods_info['distributor_id']]], 'fx_level');
+                    \think\facade\Log::write('Register - 查询分销员信息: '.json_encode($distributor));
                     if ($distributor) {
-                        $member_source_goods_model->sendFirstCoupon(
+                        \think\facade\Log::write('Register - 准备发放首次优惠券: fx_level='.$distributor['fx_level']);
+                        $coupon_result = $member_source_goods_model->sendFirstCoupon(
                             $member_id,
                             $fx_goods_info['goods_id'],
                             $distributor['fx_level']
                         );
+                        \think\facade\Log::write('Register - 优惠券发放结果: '.($coupon_result ? 'true' : 'false'));
+                    } else {
+                        \think\facade\Log::write('Register - 未找到分销员信息，无法发放优惠券');
                     }
+                } else {
+                    \think\facade\Log::write('Register - fx_goods_info数据不完整，跳过处理');
                 }
             }
 

@@ -175,8 +175,11 @@ class Goods extends BaseApi
             $member_source_goods_model = new \app\model\member\MemberSourceGoods();
             $record = $member_source_goods_model->getRecord($this->member_id, $goods_id);
 
+            \think\facade\Log::write('handleDistributorVisit - 查询记录: member_id='.$this->member_id.', goods_id='.$goods_id.', record='.json_encode($record).', distributor_fx_level='.$distributor['fx_level']);
+
             if (!$record) {
                 // 首次访问，创建记录并发放首次优惠券
+                \think\facade\Log::write('handleDistributorVisit - 首次访问，创建记录');
                 $member_source_goods_model->createRecord(
                     $this->member_id,
                     $goods_id,
@@ -184,25 +187,30 @@ class Goods extends BaseApi
                     $distributor['fx_level'],
                     $this->site_id
                 );
+                \think\facade\Log::write('handleDistributorVisit - 准备发放首次优惠券');
                 $coupon_sent = $member_source_goods_model->sendFirstCoupon(
                     $this->member_id,
                     $goods_id,
                     $distributor['fx_level']
                 );
+                \think\facade\Log::write('handleDistributorVisit - 优惠券发放结果: '.($coupon_sent ? 'true' : 'false'));
                 return $this->response($this->success(['coupon_sent' => $coupon_sent], ''));
             } else {
                 // 已访问过，检查优惠券是否可用
+                \think\facade\Log::write('handleDistributorVisit - 已访问过，检查优惠券是否需要重新发放');
                 $need_resend = $member_source_goods_model->checkCouponExpired(
                     $this->member_id,
                     $goods_id,
                     $distributor['fx_level']
                 );
+                \think\facade\Log::write('handleDistributorVisit - 是否需要重新发放: '.($need_resend ? 'true' : 'false'));
                 if ($need_resend) {
                     $coupon_sent = $member_source_goods_model->sendFirstCoupon(
                         $this->member_id,
                         $goods_id,
                         $distributor['fx_level']
                     );
+                    \think\facade\Log::write('handleDistributorVisit - 优惠券发放结果: '.($coupon_sent ? 'true' : 'false'));
                     return $this->response($this->success(['coupon_sent' => $coupon_sent], ''));
                 }
             }

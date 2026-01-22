@@ -122,16 +122,22 @@ class MemberSourceGoods extends Model
     {
         try {
             // 获取商品的首次优惠券配置
-            $goods_info = model('goods')->getInfo([['goods_id', '=', $goods_id]], 'fx_level'.$distributor_level.'_first_coupon');
+            $field_name = 'fx_level'.$distributor_level.'_first_coupon';
+            $goods_info = model('goods')->getInfo([['goods_id', '=', $goods_id]], $field_name);
+
+            Log::write('发放首次优惠券 - 商品信息: goods_id='.$goods_id.', distributor_level='.$distributor_level.', goods_info='.json_encode($goods_info));
 
             if (!$goods_info) {
+                Log::write('发放首次优惠券失败 - 未找到商品信息: goods_id='.$goods_id);
                 return false;
             }
 
-            $coupon_type_id = $goods_info['fx_level'.$distributor_level.'_first_coupon'] ?? 0;
+            $coupon_type_id = $goods_info[$field_name] ?? 0;
+            Log::write('发放首次优惠券 - 优惠券类型ID: coupon_type_id='.$coupon_type_id);
 
             // 如果未配置优惠券，跳过
             if ($coupon_type_id <= 0) {
+                Log::write('发放首次优惠券失败 - 未配置优惠券: goods_id='.$goods_id.', field='.$field_name);
                 return false;
             }
 
@@ -140,11 +146,21 @@ class MemberSourceGoods extends Model
                 $coupon_model = new \addon\coupon\model\Coupon();
                 // 获取 site_id
                 $site_id = request()->siteId();
+                Log::write('发放首次优惠券 - 准备调用giveCoupon: site_id='.$site_id.', member_id='.$member_id.', coupon_type_id='.$coupon_type_id);
+
                 // 按照 Register.php 中的调用方式：giveCoupon($coupon_data, $site_id, $member_id, $get_type)
                 $coupon_data = [
                     ['coupon_type_id' => $coupon_type_id, 'num' => 1]
                 ];
                 $result = $coupon_model->giveCoupon($coupon_data, $site_id, $member_id, \addon\coupon\model\Coupon::GET_TYPE_ACTIVITY_GIVE);
+
+                Log::write('发放首次优惠券 - giveCoupon返回结果: '.json_encode($result));
+
+                // 检查结果
+                if ($result['code'] < 0) {
+                    Log::write('发放首次优惠券失败 - giveCoupon错误: '.$result['message']);
+                    return false;
+                }
 
                 // 更新发放时间
                 $this->update([
@@ -154,12 +170,13 @@ class MemberSourceGoods extends Model
                     ['goods_id', '=', $goods_id]
                 ]);
 
-                return $result !== false;
+                return true;
             }
 
+            Log::write('发放首次优惠券失败 - Coupon类不存在');
             return false;
         } catch (\Exception $e) {
-            Log::error('发放首次优惠券失败: ' . $e->getMessage());
+            Log::error('发放首次优惠券异常: ' . $e->getMessage() . ', trace: ' . $e->getTraceAsString());
             return false;
         }
     }
