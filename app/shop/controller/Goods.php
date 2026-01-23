@@ -344,6 +344,16 @@ class Goods extends BaseShop
                 'sale_store' => input('sale_store', 'all'),
                 'is_unify_price' => input('is_unify_price', '1'),
                 'supplier_id' => input('supplier_id', 0),
+                // 分销配置字段
+                'fx_level1_first_coupon' => input('fx_level1_first_coupon', 0),// 1级分销首次优惠券ID
+                'fx_level1_complete_coupon' => input('fx_level1_complete_coupon', 0),// 1级分销完成优惠券ID
+                'fx_level1_commission' => input('fx_level1_commission', 0),// 1级分销佣金
+                'fx_level2_first_coupon' => input('fx_level2_first_coupon', 0),// 2级分销首次优惠券ID
+                'fx_level2_complete_coupon' => input('fx_level2_complete_coupon', 0),// 2级分销完成优惠券ID
+                'fx_level2_commission' => input('fx_level2_commission', 0),// 2级分销佣金
+                'fx_level3_first_coupon' => input('fx_level3_first_coupon', 0),// 3级分销首次优惠券ID
+                'fx_level3_complete_coupon' => input('fx_level3_complete_coupon', 0),// 3级分销完成优惠券ID
+                'fx_level3_commission' => input('fx_level3_commission', 0),// 3级分销佣金
             ];
             $goods_model = new GoodsModel();
             $res = $goods_model->addGoods($data);
@@ -490,6 +500,16 @@ class Goods extends BaseShop
                 'sale_store' => input('sale_store', 'all'),
                 'is_unify_price' => input('is_unify_price', '1'),
                 'supplier_id' => input('supplier_id', 0),
+                // 分销配置字段
+                'fx_level1_first_coupon' => input('fx_level1_first_coupon', 0),// 1级分销首次优惠券ID
+                'fx_level1_complete_coupon' => input('fx_level1_complete_coupon', 0),// 1级分销完成优惠券ID
+                'fx_level1_commission' => input('fx_level1_commission', 0),// 1级分销佣金
+                'fx_level2_first_coupon' => input('fx_level2_first_coupon', 0),// 2级分销首次优惠券ID
+                'fx_level2_complete_coupon' => input('fx_level2_complete_coupon', 0),// 2级分销完成优惠券ID
+                'fx_level2_commission' => input('fx_level2_commission', 0),// 2级分销佣金
+                'fx_level3_first_coupon' => input('fx_level3_first_coupon', 0),// 3级分销首次优惠券ID
+                'fx_level3_complete_coupon' => input('fx_level3_complete_coupon', 0),// 3级分销完成优惠券ID
+                'fx_level3_commission' => input('fx_level3_commission', 0),// 3级分销佣金
             ];
 
             $res = $goods_model->editGoods($data);

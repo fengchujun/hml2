@@ -10,6 +10,7 @@
 			<li lay-id="price-stock">价格库存</li>
 			<li lay-id="detail">商品详情</li>
 			<li lay-id="attr">商品参数</li>
+			<li lay-id="distribution">分销配置</li>
 			<li lay-id="senior">高级设置</li>
 		</ul>
 		<div class="layui-tab-content">
@@ -524,6 +525,111 @@
 						<button class="layui-btn layui-btn-primary" onclick="addNewAttr()">添加商品参数</button>
 					</div>
 				</div>
+			</div>
+
+			<!-- 分销配置 -->
+			<div class="layui-tab-item layui-card card-common card-brief head">
+				<div class="layui-card-header">
+					<span class="card-title">分销配置</span>
+				</div>
+
+				<div class="layui-card-body">
+					<div class="word-aux" style="margin-bottom: 20px; color: #999;">
+						说明：设置不同等级分销员通过分享该商品获得的首次优惠券、完成优惠券和佣金。填写对应优惠券的ID即可。
+					</div>
+
+					<!-- 一级分销员配置 -->
+					<div class="layui-form-item">
+						<label class="layui-form-label" style="font-weight: bold;">一级分销员：</label>
+					</div>
+
+					<div class="layui-form-item">
+						<label class="layui-form-label">首次优惠券ID：</label>
+						<div class="layui-input-block">
+							<input type="number" name="fx_level1_first_coupon" value="0" placeholder="请输入优惠券类型ID，如：5" class="layui-input len-short">
+						</div>
+						<div class="word-aux">会员首次通过该分销员链接访问商品时获得的优惠券类型ID</div>
+					</div>
+
+					<div class="layui-form-item">
+						<label class="layui-form-label">完成优惠券ID：</label>
+						<div class="layui-input-block">
+							<input type="number" name="fx_level1_complete_coupon" value="0" placeholder="请输入优惠券类型ID，如：6" class="layui-input len-short">
+						</div>
+						<div class="word-aux">会员通过该分销员链接购买并确认收货后获得的优惠券类型ID</div>
+					</div>
+
+					<div class="layui-form-item">
+						<label class="layui-form-label">佣金金额：</label>
+						<div class="layui-input-block">
+							<input type="number" name="fx_level1_commission" value="0" placeholder="请输入佣金金额，如：10.50" step="0.01" min="0" class="layui-input len-short">
+						</div>
+						<div class="word-aux">单位：元，保留两位小数</div>
+					</div>
+
+					<div style="height: 20px; border-bottom: 1px dashed #e6e6e6; margin: 20px 0;"></div>
+
+					<!-- 二级分销员配置 -->
+					<div class="layui-form-item">
+						<label class="layui-form-label" style="font-weight: bold;">二级分销员：</label>
+					</div>
+
+					<div class="layui-form-item">
+						<label class="layui-form-label">首次优惠券ID：</label>
+						<div class="layui-input-block">
+							<input type="number" name="fx_level2_first_coupon" value="0" placeholder="请输入优惠券类型ID，如：7" class="layui-input len-short">
+						</div>
+						<div class="word-aux">会员首次通过该分销员链接访问商品时获得的优惠券类型ID</div>
+					</div>
+
+					<div class="layui-form-item">
+						<label class="layui-form-label">完成优惠券ID：</label>
+						<div class="layui-input-block">
+							<input type="number" name="fx_level2_complete_coupon" value="0" placeholder="请输入优惠券类型ID，如：8" class="layui-input len-short">
+						</div>
+						<div class="word-aux">会员通过该分销员链接购买并确认收货后获得的优惠券类型ID</div>
+					</div>
+
+					<div class="layui-form-item">
+						<label class="layui-form-label">佣金金额：</label>
+						<div class="layui-input-block">
+							<input type="number" name="fx_level2_commission" value="0" placeholder="请输入佣金金额，如：8.50" step="0.01" min="0" class="layui-input len-short">
+						</div>
+						<div class="word-aux">单位：元，保留两位小数</div>
+					</div>
+
+					<div style="height: 20px; border-bottom: 1px dashed #e6e6e6; margin: 20px 0;"></div>
+
+					<!-- 三级分销员配置 -->
+					<div class="layui-form-item">
+						<label class="layui-form-label" style="font-weight: bold;">三级分销员：</label>
+					</div>
+
+					<div class="layui-form-item">
+						<label class="layui-form-label">首次优惠券ID：</label>
+						<div class="layui-input-block">
+							<input type="number" name="fx_level3_first_coupon" value="0" placeholder="请输入优惠券类型ID，如：9" class="layui-input len-short">
+						</div>
+						<div class="word-aux">会员首次通过该分销员链接访问商品时获得的优惠券类型ID</div>
+					</div>
+
+					<div class="layui-form-item">
+						<label class="layui-form-label">完成优惠券ID：</label>
+						<div class="layui-input-block">
+							<input type="number" name="fx_level3_complete_coupon" value="0" placeholder="请输入优惠券类型ID，如：10" class="layui-input len-short">
+						</div>
+						<div class="word-aux">会员通过该分销员链接购买并确认收货后获得的优惠券类型ID</div>
+					</div>
+
+					<div class="layui-form-item">
+						<label class="layui-form-label">佣金金额：</label>
+						<div class="layui-input-block">
+							<input type="number" name="fx_level3_commission" value="0" placeholder="请输入佣金金额，如：5.50" step="0.01" min="0" class="layui-input len-short">
+						</div>
+						<div class="word-aux">单位：元，保留两位小数</div>
+					</div>
+				</div>
+
 			</div>
 
 			<!-- 高级设置 -->
