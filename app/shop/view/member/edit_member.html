@@ -80,6 +80,29 @@
 						<i class="layui-icon text-color" style="margin-left: 5px;" onclick="editMemberLevel(this)"> </i>
 					</div>
 					<div class="data-item">
+						<span>分销员等级：</span>
+						<span>
+							{switch name="$member_info.data.fx_level"}
+							{case value="0"}无{/case}
+							{case value="1"}一级{/case}
+							{case value="2"}二级{/case}
+							{case value="3"}三级{/case}
+							{default /}无{/switch}
+						</span>
+						<i class="layui-icon text-color" style="margin-left: 5px;" onclick="editFxLevel(this)"> </i>
+					</div>
+					<div class="data-item">
+						<span>所属仓库：</span>
+						<span>
+							{switch name="$member_info.data.warehouse_id"}
+							{case value="0"}无{/case}
+							{case value="1"}深圳{/case}
+							{case value="2"}河源{/case}
+							{default /}无{/switch}
+						</span>
+						<i class="layui-icon text-color" style="margin-left: 5px;" onclick="editWarehouse(this)"> </i>
+					</div>
+					<div class="data-item">
 						<span>注册时间：</span>
 						<span>{:time_to_date($member_info.data.reg_time)}</span>
 					</div>
@@ -389,6 +412,74 @@
 			{/if}
 			{/foreach}
 		</div>
+	</div>
+</script>
+
+<!-- 分销员等级弹框html -->
+<script type="text/html" id="fxLevel">
+	<div class="layui-form">
+		<div class="layui-form-item">
+			<label class="layui-form-label">当前等级：</label>
+			<div class="layui-input-block account-value">
+				{switch name="$member_info.data.fx_level"}
+				{case value="0"}无{/case}
+				{case value="1"}一级{/case}
+				{case value="2"}二级{/case}
+				{case value="3"}三级{/case}
+				{default /}无{/switch}
+			</div>
+		</div>
+
+		<div class="layui-form-item">
+			<label class="layui-form-label">分销员等级：</label>
+			<div class="layui-input-block len-mid">
+				<select name="fx_level" lay-verify="required">
+					<option value="0" {if $member_info.data.fx_level eq 0}selected{/if}>无</option>
+					<option value="1" {if $member_info.data.fx_level eq 1}selected{/if}>一级</option>
+					<option value="2" {if $member_info.data.fx_level eq 2}selected{/if}>二级</option>
+					<option value="3" {if $member_info.data.fx_level eq 3}selected{/if}>三级</option>
+				</select>
+			</div>
+		</div>
+
+		<div class="form-row" style="margin-left: 200px;">
+			<button class="layui-btn" lay-submit lay-filter="saveFxLevel">确定</button>
+		</div>
+
+		<input type="hidden" name="member_id" value="{$member_info.data.member_id}" />
+	</div>
+</script>
+
+<!-- 所属仓库弹框html -->
+<script type="text/html" id="warehouse">
+	<div class="layui-form">
+		<div class="layui-form-item">
+			<label class="layui-form-label">当前仓库：</label>
+			<div class="layui-input-block account-value">
+				{switch name="$member_info.data.warehouse_id"}
+				{case value="0"}无{/case}
+				{case value="1"}深圳{/case}
+				{case value="2"}河源{/case}
+				{default /}无{/switch}
+			</div>
+		</div>
+
+		<div class="layui-form-item">
+			<label class="layui-form-label">所属仓库：</label>
+			<div class="layui-input-block len-mid">
+				<select name="warehouse_id" lay-verify="required">
+					<option value="0" {if $member_info.data.warehouse_id eq 0}selected{/if}>无</option>
+					<option value="1" {if $member_info.data.warehouse_id eq 1}selected{/if}>深圳</option>
+					<option value="2" {if $member_info.data.warehouse_id eq 2}selected{/if}>河源</option>
+				</select>
+			</div>
+		</div>
+
+		<div class="form-row" style="margin-left: 200px;">
+			<button class="layui-btn" lay-submit lay-filter="saveWarehouse">确定</button>
+		</div>
+
+		<input type="hidden" name="member_id" value="{$member_info.data.member_id}" />
 	</div>
 </script>
 

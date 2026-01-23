@@ -770,3 +770,79 @@ function saveInviteQuota(e) {
 		});
 	});
 }
+
+/**
+ * 编辑分销员等级
+ */
+function editFxLevel(event) {
+	laytpl($("#fxLevel").html()).render({}, function (html) {
+		layer.open({
+			title: '编辑分销员等级',
+			skin: 'edit-member-layer',
+			type: 1,
+			area: '400px',
+			content: html,
+			success: function () {
+				form.render();
+
+				form.on('submit(saveFxLevel)', function (data) {
+					if (repeat_flag) return false;
+					repeat_flag = true;
+
+					editMember(data.field, function (res) {
+						repeat_flag = false;
+						if (res.code == 0) {
+							layer.msg('保存成功', {icon: 1});
+							layer.closeAll();
+							listenerHash(); // 刷新页面
+						} else {
+							layer.msg(res.message, {icon: 2});
+						}
+					});
+					return false;
+				});
+			},
+			end: function () {
+				repeat_flag = false;
+			}
+		});
+	});
+}
+
+/**
+ * 编辑所属仓库
+ */
+function editWarehouse(event) {
+	laytpl($("#warehouse").html()).render({}, function (html) {
+		layer.open({
+			title: '编辑所属仓库',
+			skin: 'edit-member-layer',
+			type: 1,
+			area: '400px',
+			content: html,
+			success: function () {
+				form.render();
+
+				form.on('submit(saveWarehouse)', function (data) {
+					if (repeat_flag) return false;
+					repeat_flag = true;
+
+					editMember(data.field, function (res) {
+						repeat_flag = false;
+						if (res.code == 0) {
+							layer.msg('保存成功', {icon: 1});
+							layer.closeAll();
+							listenerHash(); // 刷新页面
+						} else {
+							layer.msg(res.message, {icon: 2});
+						}
+					});
+					return false;
+				});
+			},
+			end: function () {
+				repeat_flag = false;
+			}
+		});
+	});
+}
