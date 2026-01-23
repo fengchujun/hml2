@@ -57,6 +57,7 @@ class OrderComplete
             }
 
             // 发放分销完成优惠券
+            file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - OrderComplete handle 方法调用 sendDistributionCompleteCoupon: order_id=' . $data['order_id'] . ', member_id=' . $member_id . "\n", FILE_APPEND);
             $this->sendDistributionCompleteCoupon($data['order_id'], $member_id);
 
         }
@@ -72,10 +73,15 @@ class OrderComplete
     private function sendDistributionCompleteCoupon($order_id, $member_id)
     {
         try {
+            file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - 开始发放完成优惠券: order_id=' . $order_id . ', member_id=' . $member_id . "\n", FILE_APPEND);
+
             // 从订单表读取完成优惠券数据
             $order_info = model('order')->getInfo([['order_id', '=', $order_id]], 'distribution_complete_coupons,site_id');
 
+            file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - 订单信息: ' . json_encode($order_info) . "\n", FILE_APPEND);
+
             if (!$order_info || empty($order_info['distribution_complete_coupons'])) {
+                file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - 订单无完成优惠券配置' . "\n", FILE_APPEND);
                 \think\facade\Log::write('订单完成优惠券发放 - 订单无完成优惠券配置: order_id=' . $order_id);
                 return;
             }
@@ -83,7 +89,10 @@ class OrderComplete
             // 解析完成优惠券数据（JSON格式：{goods_id: coupon_type_id}）
             $complete_coupons = json_decode($order_info['distribution_complete_coupons'], true);
 
+            file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - 解析优惠券数据: ' . json_encode($complete_coupons) . "\n", FILE_APPEND);
+
             if (!$complete_coupons || !is_array($complete_coupons)) {
+                file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - 优惠券数据格式错误' . "\n", FILE_APPEND);
                 \think\facade\Log::write('订单完成优惠券发放 - 完成优惠券数据格式错误: order_id=' . $order_id);
                 return;
             }
@@ -92,6 +101,7 @@ class OrderComplete
 
             // 检查优惠券插件是否存在
             if (!class_exists('\addon\coupon\model\Coupon')) {
+                file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - Coupon类不存在' . "\n", FILE_APPEND);
                 \think\facade\Log::write('订单完成优惠券发放 - Coupon类不存在');
                 return;
             }
@@ -99,9 +109,12 @@ class OrderComplete
             $coupon_model = new \addon\coupon\model\Coupon();
             $site_id = $order_info['site_id'];
 
+            file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - 准备发放优惠券，site_id=' . $site_id . "\n", FILE_APPEND);
+
             // 遍历每个商品的完成优惠券
             foreach ($complete_coupons as $goods_id => $coupon_type_id) {
                 if ($coupon_type_id > 0) {
+                    file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - 发放优惠券: goods_id=' . $goods_id . ', coupon_type_id=' . $coupon_type_id . "\n", FILE_APPEND);
                     \think\facade\Log::write('订单完成优惠券发放 - 发放优惠券: goods_id=' . $goods_id . ', coupon_type_id=' . $coupon_type_id);
 
                     // 发放优惠券
@@ -115,16 +128,21 @@ class OrderComplete
                         \addon\coupon\model\Coupon::GET_TYPE_ACTIVITY_GIVE
                     );
 
+                    file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - giveCoupon结果: ' . json_encode($result) . "\n", FILE_APPEND);
+
                     if ($result && isset($result['code'])) {
                         if ($result['code'] >= 0) {
+                            file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - 发放成功' . "\n", FILE_APPEND);
                             \think\facade\Log::write('订单完成优惠券发放 - 发放成功: goods_id=' . $goods_id . ', coupon_type_id=' . $coupon_type_id);
                         } else {
+                            file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - 发放失败: ' . $result['message'] . "\n", FILE_APPEND);
                             \think\facade\Log::write('订单完成优惠券发放 - 发放失败: goods_id=' . $goods_id . ', error=' . $result['message']);
                         }
                     }
                 }
             }
         } catch (\Exception $e) {
+            file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - 异常: ' . $e->getMessage() . "\n", FILE_APPEND);
             \think\facade\Log::error('发放分销完成优惠券异常: ' . $e->getMessage() . ', trace: ' . $e->getTraceAsString());
         }
     }
