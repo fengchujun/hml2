@@ -373,6 +373,8 @@ class OrderCommon extends BaseModel
      */
     public function orderComplete($order_id)
     {
+        file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - orderComplete 方法被调用: order_id=' . $order_id . "\n", FILE_APPEND);
+
         $cache_name = 'order_complete_execute_' . $order_id;
         if(Cache::get($cache_name)) return $this->success();
         Cache::set($cache_name, 1);
@@ -382,10 +384,13 @@ class OrderCommon extends BaseModel
             $order_condition = [ [ 'order_id', '=', $order_id ] ];
             $order_info = model('order')->getInfo($order_condition, '*');
             if (empty($order_info)) {
+                file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - orderComplete 订单数据缺失: order_id=' . $order_id . "\n", FILE_APPEND);
                 Cache::delete($cache_name);
                 return $this->success(['message' => '订单数据缺失']);
             }
+            file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - orderComplete 当前订单状态: order_status=' . $order_info['order_status'] . "\n", FILE_APPEND);
             if (!in_array($order_info['order_status'], [self::ORDER_TAKE_DELIVERY, self::ORDER_VERIFYED])) {
+                file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - orderComplete 订单不是已收货状态: order_status=' . $order_info['order_status'] . "\n", FILE_APPEND);
                 Cache::delete($cache_name);
                 return $this->success(['message' => '订单不是已收货状态或已核销状态']);
             }
@@ -414,12 +419,14 @@ class OrderCommon extends BaseModel
             } else {
                 $order_data[ 'is_enable_refund' ] = 0;
             }
+            file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - orderComplete 准备更新订单状态为已完成: order_status=' . $order_data['order_status'] . "\n", FILE_APPEND);
             $res = model('order')->update($order_data, $order_condition);
             /******************************************************* 订单退款操作相关 **********************************************************/
             //订单项移除可退款操作
             $order_refund_model = new OrderRefund();
             $order_refund_model->removeOrderGoodsRefundAction($order_condition);
 
+            file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - orderComplete 准备调用 OrderComplete::event: order_id=' . $order_id . "\n", FILE_APPEND);
             //关键业务
             ( new OrderComplete() )->event([
                 'order_info' => $order_info,
@@ -430,8 +437,10 @@ class OrderCommon extends BaseModel
             ]);
 
             Cache::delete($cache_name);
+            file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - orderComplete 执行完成: order_id=' . $order_id . "\n", FILE_APPEND);
             return $this->success($res);
         }catch(\Exception $e){
+            file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - orderComplete 捕获异常: ' . $e->getMessage() . ', file: ' . $e->getFile() . ', line: ' . $e->getLine() . "\n", FILE_APPEND);
             Cache::delete($cache_name);
             return $this->error(['file' => $e->getFile(), 'line' => $e->getLine(), 'message' => $e->getMessage()], '订单完成捕获错误');
         }
