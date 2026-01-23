@@ -60,6 +60,10 @@ class OrderCreate extends BaseModel
 
             // 计算分销佣金、完成优惠券和关联仓库
             $commission_data = $this->calculateDistributionCommission();
+
+            // 直接写入调试文件
+            file_put_contents('/tmp/order_debug.log', date('Y-m-d H:i:s') . ' - member_id=' . $this->member_id . ' 计算分销数据结果: ' . json_encode($commission_data) . "\n", FILE_APPEND);
+
             \think\facade\Log::write('OrderCreate - 计算分销数据结果: '.json_encode($commission_data));
             $order_insert_data[ 'distributor_id' ] = $commission_data['distributor_id'];
             $order_insert_data[ 'commission_amount' ] = $commission_data['commission_amount'];
@@ -69,6 +73,9 @@ class OrderCreate extends BaseModel
             $order_insert_data[ 'distribution_complete_coupons' ] = !empty($commission_data['complete_coupons'])
                 ? json_encode($commission_data['complete_coupons'], JSON_UNESCAPED_UNICODE)
                 : '';
+
+            file_put_contents('/tmp/order_debug.log', date('Y-m-d H:i:s') . ' - 完成优惠券数据: ' . $order_insert_data['distribution_complete_coupons'] . "\n", FILE_APPEND);
+
             \think\facade\Log::write('OrderCreate - 完成优惠券数据: '.$order_insert_data['distribution_complete_coupons']);
 
             $this->order_id = model('order')->add($order_insert_data);
