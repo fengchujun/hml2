@@ -1,4 +1,6 @@
 <?php
+namespace think;
+
 /**
  * 手动触发订单完成事件 - 用于测试
  * 使用方法: php test_order_complete.php <order_id>
@@ -16,7 +18,6 @@ if ($order_id <= 0) {
 }
 
 // 加载ThinkPHP框架
-namespace think;
 require __DIR__ . '/vendor/autoload.php';
 
 // 启动应用
