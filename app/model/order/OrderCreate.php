@@ -58,12 +58,16 @@ class OrderCreate extends BaseModel
             $order_insert_data[ 'order_status_name' ] = $this->order_type[ 'order_status' ][ 'name' ];
             $order_insert_data[ 'order_status_action' ] = json_encode($this->order_type[ 'order_status' ], JSON_UNESCAPED_UNICODE);
 
-            // 计算分销佣金和关联仓库
+            // 计算分销佣金、完成优惠券和关联仓库
             $commission_data = $this->calculateDistributionCommission();
             $order_insert_data[ 'distributor_id' ] = $commission_data['distributor_id'];
             $order_insert_data[ 'commission_amount' ] = $commission_data['commission_amount'];
             $order_insert_data[ 'commission_settled' ] = 0;
             $order_insert_data[ 'warehouse_id' ] = $commission_data['warehouse_id'];
+            // 保存完成优惠券数据（JSON格式）
+            $order_insert_data[ 'distribution_complete_coupons' ] = !empty($commission_data['complete_coupons'])
+                ? json_encode($commission_data['complete_coupons'], JSON_UNESCAPED_UNICODE)
+                : '';
 
             $this->order_id = model('order')->add($order_insert_data);
 
@@ -468,7 +472,7 @@ class OrderCreate extends BaseModel
     }
 
     /**
-     * 计算分销佣金和关联仓库
+     * 计算分销佣金、完成优惠券和关联仓库
      * @return array
      */
     public function calculateDistributionCommission()
@@ -476,6 +480,7 @@ class OrderCreate extends BaseModel
         $total_commission = 0;
         $distributor_id = 0;
         $warehouse_id = 0;
+        $complete_coupons = []; // 存储商品ID和对应的完成优惠券ID
 
         try {
             $member_source_goods_model = new \app\model\member\MemberSourceGoods();
@@ -487,13 +492,25 @@ class OrderCreate extends BaseModel
                     $distributor_id = $record['distributor_id'];
                     $fx_level = $record['distributor_level'];
 
-                    // 获取商品的佣金配置
+                    // 获取商品的佣金和完成优惠券配置
                     $commission_field = 'fx_level' . $fx_level . '_commission';
-                    $goods_info = model('goods')->getInfo([['goods_id', '=', $goods['goods_id']]], $commission_field);
+                    $complete_coupon_field = 'fx_level' . $fx_level . '_complete_coupon';
+                    $goods_info = model('goods')->getInfo(
+                        [['goods_id', '=', $goods['goods_id']]],
+                        $commission_field . ',' . $complete_coupon_field
+                    );
 
-                    if ($goods_info && isset($goods_info[$commission_field]) && $goods_info[$commission_field] > 0) {
-                        // 佣金 = 单品佣金 × 数量
-                        $total_commission += $goods_info[$commission_field] * $goods['num'];
+                    if ($goods_info) {
+                        // 计算佣金
+                        if (isset($goods_info[$commission_field]) && $goods_info[$commission_field] > 0) {
+                            // 佣金 = 单品佣金 × 数量
+                            $total_commission += $goods_info[$commission_field] * $goods['num'];
+                        }
+
+                        // 记录完成优惠券
+                        if (isset($goods_info[$complete_coupon_field]) && $goods_info[$complete_coupon_field] > 0) {
+                            $complete_coupons[$goods['goods_id']] = $goods_info[$complete_coupon_field];
+                        }
                     }
                 }
             }
@@ -505,13 +522,14 @@ class OrderCreate extends BaseModel
             }
 
         } catch (\Exception $e) {
-            \think\facade\Log::error('计算分销佣金失败: ' . $e->getMessage());
+            \think\facade\Log::error('计算分销佣金和完成优惠券失败: ' . $e->getMessage());
         }
 
         return [
             'distributor_id' => $distributor_id,
             'commission_amount' => $total_commission,
-            'warehouse_id' => $warehouse_id
+            'warehouse_id' => $warehouse_id,
+            'complete_coupons' => $complete_coupons // 返回完成优惠券数据
         ];
     }
 

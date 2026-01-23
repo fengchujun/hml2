@@ -45,7 +45,8 @@ ALTER TABLE `hml_order`
 ADD COLUMN `distributor_id` int DEFAULT 0 COMMENT '分销员ID' AFTER `member_id`,
 ADD COLUMN `commission_amount` decimal(10,2) DEFAULT 0.00 COMMENT '佣金金额' AFTER `distributor_id`,
 ADD COLUMN `commission_settled` tinyint DEFAULT 0 COMMENT '是否已结算 0未结算 1已结算' AFTER `commission_amount`,
-ADD COLUMN `warehouse_id` int DEFAULT 0 COMMENT '发货仓库ID' AFTER `commission_settled`;
+ADD COLUMN `warehouse_id` int DEFAULT 0 COMMENT '发货仓库ID' AFTER `commission_settled`,
+ADD COLUMN `distribution_complete_coupons` text COMMENT '分销完成优惠券JSON {goods_id: coupon_type_id}' AFTER `warehouse_id`;
 
 -- 5. 修改管理员表，增加仓库ID
 ALTER TABLE `hml_user`

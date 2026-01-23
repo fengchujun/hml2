@@ -72,29 +72,60 @@ class OrderComplete
     private function sendDistributionCompleteCoupon($order_id, $member_id)
     {
         try {
-            // 查询订单商品
-            $order_goods_list = model('order_goods')->where([['order_id', '=', $order_id]])->select();
+            // 从订单表读取完成优惠券数据
+            $order_info = model('order')->getInfo([['order_id', '=', $order_id]], 'distribution_complete_coupons,site_id');
 
-            if (!$order_goods_list) {
+            if (!$order_info || empty($order_info['distribution_complete_coupons'])) {
+                \think\facade\Log::write('订单完成优惠券发放 - 订单无完成优惠券配置: order_id=' . $order_id);
                 return;
             }
 
-            $member_source_goods_model = new \app\model\member\MemberSourceGoods();
-            foreach ($order_goods_list as $goods) {
-                // 检查该商品是否有分销记录
-                $record = $member_source_goods_model->getRecord($member_id, $goods['goods_id']);
+            // 解析完成优惠券数据（JSON格式：{goods_id: coupon_type_id}）
+            $complete_coupons = json_decode($order_info['distribution_complete_coupons'], true);
 
-                if ($record) {
-                    // 发放完成优惠券
-                    $member_source_goods_model->sendCompleteCoupon(
+            if (!$complete_coupons || !is_array($complete_coupons)) {
+                \think\facade\Log::write('订单完成优惠券发放 - 完成优惠券数据格式错误: order_id=' . $order_id);
+                return;
+            }
+
+            \think\facade\Log::write('订单完成优惠券发放 - 开始发放: order_id=' . $order_id . ', member_id=' . $member_id . ', coupons=' . json_encode($complete_coupons));
+
+            // 检查优惠券插件是否存在
+            if (!class_exists('\addon\coupon\model\Coupon')) {
+                \think\facade\Log::write('订单完成优惠券发放 - Coupon类不存在');
+                return;
+            }
+
+            $coupon_model = new \addon\coupon\model\Coupon();
+            $site_id = $order_info['site_id'];
+
+            // 遍历每个商品的完成优惠券
+            foreach ($complete_coupons as $goods_id => $coupon_type_id) {
+                if ($coupon_type_id > 0) {
+                    \think\facade\Log::write('订单完成优惠券发放 - 发放优惠券: goods_id=' . $goods_id . ', coupon_type_id=' . $coupon_type_id);
+
+                    // 发放优惠券
+                    $coupon_data = [
+                        ['coupon_type_id' => $coupon_type_id, 'num' => 1]
+                    ];
+                    $result = $coupon_model->giveCoupon(
+                        $coupon_data,
+                        $site_id,
                         $member_id,
-                        $goods['goods_id'],
-                        $record['distributor_level']
+                        \addon\coupon\model\Coupon::GET_TYPE_ACTIVITY_GIVE
                     );
+
+                    if ($result && isset($result['code'])) {
+                        if ($result['code'] >= 0) {
+                            \think\facade\Log::write('订单完成优惠券发放 - 发放成功: goods_id=' . $goods_id . ', coupon_type_id=' . $coupon_type_id);
+                        } else {
+                            \think\facade\Log::write('订单完成优惠券发放 - 发放失败: goods_id=' . $goods_id . ', error=' . $result['message']);
+                        }
+                    }
                 }
             }
         } catch (\Exception $e) {
-            \think\facade\Log::error('发放分销完成优惠券失败: ' . $e->getMessage());
+            \think\facade\Log::error('发放分销完成优惠券异常: ' . $e->getMessage() . ', trace: ' . $e->getTraceAsString());
         }
     }
 
