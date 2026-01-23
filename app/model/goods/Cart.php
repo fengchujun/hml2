@@ -38,14 +38,24 @@ class Cart extends BaseModel
             if (!empty($brand_info)) {
                 $brand_id = $brand_info['brand_id'];
 
-                // brand_id=1 只有特邀会员(member_level=2)可以购买
-                if ($brand_id == 1 && $member_level != 2) {
-                    return $this->error('该商品仅限特邀会员购买');
+                // brand_id=1 只有特邀会员(member_level=2)或分销员(member_level=6)可以购买
+                if ($brand_id == 1 && !in_array($member_level, [2, 6])) {
+                    // 检查是否通过分销链接访问过该商品（获得永久权限）
+                    $member_source_goods_model = new \app\model\member\MemberSourceGoods();
+                    $has_permission = $member_source_goods_model->checkPermission($data['member_id'], $goods_info['goods_id']);
+                    if (!$has_permission) {
+                        return $this->error('该商品仅限特邀会员购买');
+                    }
                 }
 
-                // brand_id=2 普通会员不能购买
-                if ($brand_id == 2 && $member_level != 2) {
-                    return $this->error('该商品已售罄');
+                // brand_id=2 普通会员不能购买（除非通过分销链接访问过）
+                if ($brand_id == 2 && $member_level == 1) {
+                    // 检查是否通过分销链接访问过该商品（获得永久权限）
+                    $member_source_goods_model = new \app\model\member\MemberSourceGoods();
+                    $has_permission = $member_source_goods_model->checkPermission($data['member_id'], $goods_info['goods_id']);
+                    if (!$has_permission) {
+                        return $this->error('该商品已售罄');
+                    }
                 }
             }
         }

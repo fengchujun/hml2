@@ -88,9 +88,18 @@ class GoodsApi extends BaseModel
                 $member_level = $member_info_temp['member_level'];
             }
         }
-        // brand_id=1的商品只有特邀会员(member_level=2)可以查看
-        if (isset($goods_sku_detail['brand_id']) && $goods_sku_detail['brand_id'] == 1 && $member_level != 2) {
-            return $this->error('该商品仅限特邀会员查看');
+        // brand_id=1的商品只有特邀会员(member_level=2)或分销员(member_level=6)可以查看
+        if (isset($goods_sku_detail['brand_id']) && $goods_sku_detail['brand_id'] == 1 && !in_array($member_level, [2, 6])) {
+            // 检查是否通过分销链接访问过该商品（获得永久权限）
+            if ($member_id > 0) {
+                $member_source_goods_model = new \app\model\member\MemberSourceGoods();
+                $has_permission = $member_source_goods_model->checkPermission($member_id, $goods_sku_detail['goods_id']);
+                if (!$has_permission) {
+                    return $this->error('该商品仅限特邀会员查看');
+                }
+            } else {
+                return $this->error('该商品仅限特邀会员查看');
+            }
         }
 
         // 处理商品支持的配送方式
@@ -185,9 +194,17 @@ class GoodsApi extends BaseModel
 
         $this->handleGoodsDetailData($res['goods_sku_detail'], $member_id, $site_id);
 
-        // brand_id=2 的商品对普通会员(member_level=1)显示库存为0
+        // brand_id=2 的商品对普通会员(member_level=1)显示库存为0（除非通过分销链接访问过）
         if (isset($res['goods_sku_detail']['brand_id']) && $res['goods_sku_detail']['brand_id'] == 2 && $member_level == 1) {
-            $res['goods_sku_detail']['stock'] = 0;
+            // 检查是否通过分销链接访问过该商品（获得永久权限）
+            $has_permission = false;
+            if ($member_id > 0) {
+                $member_source_goods_model = new \app\model\member\MemberSourceGoods();
+                $has_permission = $member_source_goods_model->checkPermission($member_id, $res['goods_sku_detail']['goods_id']);
+            }
+            if (!$has_permission) {
+                $res['goods_sku_detail']['stock'] = 0;
+            }
         }
 
         return $this->success($res);
@@ -292,9 +309,17 @@ class GoodsApi extends BaseModel
                     $goods_sku_list[$k]['presale_id'] = $presale_sku['presale_id'];
                 }
             }
-            // brand_id=2 的商品对普通会员(member_level=1)显示库存为0
+            // brand_id=2 的商品对普通会员(member_level=1)显示库存为0（除非通过分销链接访问过）
             if (isset($v['brand_id']) && $v['brand_id'] == 2 && $member_level == 1) {
-                $goods_sku_list[$k]['stock'] = 0;
+                // 检查是否通过分销链接访问过该商品（获得永久权限）
+                $has_permission = false;
+                if ($member_id > 0 && isset($v['goods_id'])) {
+                    $member_source_goods_model = new \app\model\member\MemberSourceGoods();
+                    $has_permission = $member_source_goods_model->checkPermission($member_id, $v['goods_id']);
+                }
+                if (!$has_permission) {
+                    $goods_sku_list[$k]['stock'] = 0;
+                }
             }
         }
         return $this->success($goods_sku_list);

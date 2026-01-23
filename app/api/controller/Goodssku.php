@@ -242,8 +242,8 @@ class Goodssku extends BaseApi
                 $member_level = $member_info['member_level'];
             }
         }
-        // 如果不是特邀会员(member_level != 2)，过滤掉brand_id=1的商品
-        if ($member_level != 2) {
+        // 如果不是特邀会员(member_level != 2)且不是分销员(member_level != 6)，过滤掉brand_id=1的商品
+        if (!in_array($member_level, [2, 6])) {
             $condition[] = [ 'g.brand_id', '<>', 1 ];
         }
 
@@ -446,8 +446,8 @@ class Goodssku extends BaseApi
                 $member_level = $member_info['member_level'];
             }
         }
-        // 如果不是特邀会员(member_level != 2)，过滤掉brand_id=1的商品
-        if ($member_level != 2) {
+        // 如果不是特邀会员(member_level != 2)且不是分销员(member_level != 6)，过滤掉brand_id=1的商品
+        if (!in_array($member_level, [2, 6])) {
             $condition[] = [ 'g.brand_id', '<>', 1 ];
         }
 
@@ -650,8 +650,8 @@ class Goodssku extends BaseApi
                 $member_level = $member_info['member_level'];
             }
         }
-        // 如果不是特邀会员(member_level != 2)，过滤掉brand_id=1的商品
-        if ($member_level != 2) {
+        // 如果不是特邀会员(member_level != 2)且不是分销员(member_level != 6)，过滤掉brand_id=1的商品
+        if (!in_array($member_level, [2, 6])) {
             $condition[] = [ 'g.brand_id', '<>', 1 ];
         }
 
@@ -805,8 +805,8 @@ class Goodssku extends BaseApi
                 $member_level = $member_info['member_level'];
             }
         }
-        // 如果不是特邀会员(member_level != 2)，过滤掉brand_id=1的商品
-        if ($member_level != 2) {
+        // 如果不是特邀会员(member_level != 2)且不是分销员(member_level != 6)，过滤掉brand_id=1的商品
+        if (!in_array($member_level, [2, 6])) {
             $condition[] = [ 'g.brand_id', '<>', 1 ];
         }
 
