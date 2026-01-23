@@ -30,8 +30,11 @@ class OrderComplete
             [ 'order_id', '=', $data[ 'order_id' ] ]
         ];
         $order_info = $order_model->getOrderInfo($condition, 'order_money,order_status,site_id,member_id')[ 'data' ] ?? [];
-        //如果缺失已完成
-        if ($order_info[ 'order_status' ] == 10) {
+
+        file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - OrderComplete handle 开始: order_id=' . $data['order_id'] . ', order_status=' . ($order_info['order_status'] ?? 'null') . "\n", FILE_APPEND);
+
+        //如果是已完成（order_status=4或10都表示已完成）
+        if (in_array($order_info[ 'order_status' ], [4, 10])) {
             //会员等级 计算积分返还比率
             $site_id = $order_info[ 'site_id' ];
             $member_id = $order_info[ 'member_id' ];
