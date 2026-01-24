@@ -415,62 +415,6 @@
 	</div>
 </script>
 
-<!-- 分销员等级弹框html -->
-<script type="text/html" id="fxLevel">
-	<div class="layui-form">
-		<div class="layui-form-item">
-			<label class="layui-form-label">当前等级：</label>
-			<div class="layui-input-block account-value">
-				{switch name="$member_info.data.fx_level"}
-				{case value="0"}无{/case}
-				{case value="1"}一级{/case}
-				{case value="2"}二级{/case}
-				{case value="3"}三级{/case}
-				{default /}无{/switch}
-			</div>
-		</div>
-
-		<div class="layui-form-item">
-			<label class="layui-form-label">分销员等级：</label>
-			<div class="layui-input-block len-mid">
-				<select name="fx_level">
-					<option value="0" {if $member_info.data.fx_level eq 0}selected{/if}>无</option>
-					<option value="1" {if $member_info.data.fx_level eq 1}selected{/if}>一级</option>
-					<option value="2" {if $member_info.data.fx_level eq 2}selected{/if}>二级</option>
-					<option value="3" {if $member_info.data.fx_level eq 3}selected{/if}>三级</option>
-				</select>
-			</div>
-		</div>
-	</div>
-</script>
-
-<!-- 所属仓库弹框html -->
-<script type="text/html" id="warehouse">
-	<div class="layui-form">
-		<div class="layui-form-item">
-			<label class="layui-form-label">当前仓库：</label>
-			<div class="layui-input-block account-value">
-				{switch name="$member_info.data.warehouse_id"}
-				{case value="0"}无{/case}
-				{case value="1"}深圳{/case}
-				{case value="2"}河源{/case}
-				{default /}无{/switch}
-			</div>
-		</div>
-
-		<div class="layui-form-item">
-			<label class="layui-form-label">所属仓库：</label>
-			<div class="layui-input-block len-mid">
-				<select name="warehouse_id">
-					<option value="0" {if $member_info.data.warehouse_id eq 0}selected{/if}>无</option>
-					<option value="1" {if $member_info.data.warehouse_id eq 1}selected{/if}>深圳</option>
-					<option value="2" {if $member_info.data.warehouse_id eq 2}selected{/if}>河源</option>
-				</select>
-			</div>
-		</div>
-	</div>
-</script>
-
 <script>
 	var date = {$member_info.data.reg_time};
 	$(".reg-time").text(ns.time_to_date(date, "Y-m-d"));
