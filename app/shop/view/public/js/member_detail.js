@@ -784,22 +784,25 @@ function editFxLevel(event) {
 			content: html,
 			success: function () {
 				form.render();
+			},
+			btn: ['保存', '取消'],
+			yes: function () {
+				var data = {
+					fx_level: $('[name="fx_level"]').val()
+				};
 
-				form.on('submit(saveFxLevel)', function (data) {
-					if (repeat_flag) return false;
-					repeat_flag = true;
+				if (repeat_flag) return false;
+				repeat_flag = true;
 
-					editMember(data.field, function (res) {
-						repeat_flag = false;
-						if (res.code == 0) {
-							layer.msg('保存成功', {icon: 1});
-							layer.closeAll();
-							listenerHash(); // 刷新页面
-						} else {
-							layer.msg(res.message, {icon: 2});
-						}
-					});
-					return false;
+				editMember(data, function (res) {
+					repeat_flag = false;
+					if (res.code == 0) {
+						layer.msg('保存成功', {icon: 1});
+						layer.closeAll();
+						listenerHash(); // 刷新页面
+					} else {
+						layer.msg(res.message, {icon: 2});
+					}
 				});
 			},
 			end: function () {
@@ -822,22 +825,25 @@ function editWarehouse(event) {
 			content: html,
 			success: function () {
 				form.render();
+			},
+			btn: ['保存', '取消'],
+			yes: function () {
+				var data = {
+					warehouse_id: $('[name="warehouse_id"]').val()
+				};
 
-				form.on('submit(saveWarehouse)', function (data) {
-					if (repeat_flag) return false;
-					repeat_flag = true;
+				if (repeat_flag) return false;
+				repeat_flag = true;
 
-					editMember(data.field, function (res) {
-						repeat_flag = false;
-						if (res.code == 0) {
-							layer.msg('保存成功', {icon: 1});
-							layer.closeAll();
-							listenerHash(); // 刷新页面
-						} else {
-							layer.msg(res.message, {icon: 2});
-						}
-					});
-					return false;
+				editMember(data, function (res) {
+					repeat_flag = false;
+					if (res.code == 0) {
+						layer.msg('保存成功', {icon: 1});
+						layer.closeAll();
+						listenerHash(); // 刷新页面
+					} else {
+						layer.msg(res.message, {icon: 2});
+					}
 				});
 			},
 			end: function () {

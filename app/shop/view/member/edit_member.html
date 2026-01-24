@@ -433,7 +433,7 @@
 		<div class="layui-form-item">
 			<label class="layui-form-label">分销员等级：</label>
 			<div class="layui-input-block len-mid">
-				<select name="fx_level" lay-verify="required">
+				<select name="fx_level">
 					<option value="0" {if $member_info.data.fx_level eq 0}selected{/if}>无</option>
 					<option value="1" {if $member_info.data.fx_level eq 1}selected{/if}>一级</option>
 					<option value="2" {if $member_info.data.fx_level eq 2}selected{/if}>二级</option>
@@ -441,12 +441,6 @@
 				</select>
 			</div>
 		</div>
-
-		<div class="form-row" style="margin-left: 200px;">
-			<button class="layui-btn" lay-submit lay-filter="saveFxLevel">确定</button>
-		</div>
-
-		<input type="hidden" name="member_id" value="{$member_info.data.member_id}" />
 	</div>
 </script>
 
@@ -467,19 +461,13 @@
 		<div class="layui-form-item">
 			<label class="layui-form-label">所属仓库：</label>
 			<div class="layui-input-block len-mid">
-				<select name="warehouse_id" lay-verify="required">
+				<select name="warehouse_id">
 					<option value="0" {if $member_info.data.warehouse_id eq 0}selected{/if}>无</option>
 					<option value="1" {if $member_info.data.warehouse_id eq 1}selected{/if}>深圳</option>
 					<option value="2" {if $member_info.data.warehouse_id eq 2}selected{/if}>河源</option>
 				</select>
 			</div>
 		</div>
-
-		<div class="form-row" style="margin-left: 200px;">
-			<button class="layui-btn" lay-submit lay-filter="saveWarehouse">确定</button>
-		</div>
-
-		<input type="hidden" name="member_id" value="{$member_info.data.member_id}" />
 	</div>
 </script>
 
