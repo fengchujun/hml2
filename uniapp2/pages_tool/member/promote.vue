@@ -87,6 +87,20 @@
 						<text class="label">普通会员</text>
 					</view>
 				</view>
+
+				<!-- 佣金统计 -->
+				<view class="commission-section">
+					<view class="commission-grid">
+						<view class="commission-item">
+							<text class="amount">¥{{ commissionInfo.unsettled_commission.toFixed(2) }}</text>
+							<text class="label">未结算佣金</text>
+						</view>
+						<view class="commission-item settled">
+							<text class="amount">¥{{ commissionInfo.settled_commission.toFixed(2) }}</text>
+							<text class="label">已结算佣金</text>
+						</view>
+					</view>
+				</view>
 			</view>
 
 			<!-- 推广工具 -->
@@ -151,6 +165,44 @@
 				</view>
 			</view>
 
+			<!-- 分销订单列表 -->
+			<view class="orders-card" v-if="distributionOrders.length > 0">
+				<view class="section-title">
+					<text class="icon">📦</text>
+					<text>分销订单</text>
+					<text class="count">（最近{{ distributionOrders.length }}笔）</text>
+				</view>
+				<view class="orders-list">
+					<view class="order-item" v-for="(order, index) in distributionOrders" :key="order.order_id">
+						<view class="order-header">
+							<text class="order-no">订单号：{{ order.order_no }}</text>
+							<text class="order-status" :class="{'settled': order.commission_settled == 1}">
+								{{ order.commission_settled == 1 ? '已结算' : '未结算' }}
+							</text>
+						</view>
+						<view class="order-body">
+							<view class="buyer-info">
+								<image :src="$util.img(order.buyer_headimg || 'public/uniapp/default_head.png')"
+									class="buyer-avatar"
+									mode="aspectFill"></image>
+								<text class="buyer-name">{{ order.buyer_nickname }}</text>
+							</view>
+							<view class="order-amount">
+								<text class="label">订单金额：</text>
+								<text class="value">¥{{ order.order_money }}</text>
+							</view>
+							<view class="commission-amount">
+								<text class="label">佣金：</text>
+								<text class="value highlight">¥{{ order.commission_amount }}</text>
+							</view>
+						</view>
+						<view class="order-footer">
+							<text class="order-time">{{ $util.formatTime(order.create_time, 'Y-m-d H:i:s') }}</text>
+						</view>
+					</view>
+				</view>
+			</view>
+
 			<!-- 普通会员引导卡片 -->
 			<view class="guide-card" v-if="!memberInfo.is_vip">
 				<view class="guide-content">
@@ -189,7 +241,13 @@ export default {
 				vip_member_count: 0,
 				normal_member_count: 0
 			},
-			recommendedMembers: []
+			recommendedMembers: [],
+			commissionInfo: {
+				unsettled_commission: 0,
+				settled_commission: 0,
+				total_commission: 0
+			},
+			distributionOrders: []
 		};
 	},
 	onLoad() {
@@ -225,6 +283,12 @@ export default {
 						this.preserveInfo = res.data.preserve_info;
 						this.stats = res.data.stats;
 						this.recommendedMembers = res.data.recommended_members || [];
+						this.commissionInfo = res.data.commission_info || {
+							unsettled_commission: 0,
+							settled_commission: 0,
+							total_commission: 0
+						};
+						this.distributionOrders = res.data.distribution_orders || [];
 					} else {
 						this.$util.showToast({ title: res.message });
 					}
@@ -436,6 +500,51 @@ export default {
 			}
 		}
 	}
+
+	.commission-section {
+		margin-top: 40rpx;
+		padding-top: 40rpx;
+		border-top: 1rpx solid #f0f0f0;
+
+		.commission-grid {
+			display: flex;
+			justify-content: space-around;
+
+			.commission-item {
+				flex: 1;
+				text-align: center;
+				padding: 30rpx 20rpx;
+				background: linear-gradient(135deg, #ffa726 0%, #ff9800 100%);
+				border-radius: 16rpx;
+				margin: 0 10rpx;
+
+				.amount {
+					display: block;
+					font-size: 44rpx;
+					font-weight: bold;
+					color: #fff;
+					margin-bottom: 10rpx;
+				}
+
+				.label {
+					font-size: 24rpx;
+					color: rgba(255, 255, 255, 0.9);
+				}
+
+				&:first-child {
+					margin-left: 0;
+				}
+
+				&:last-child {
+					margin-right: 0;
+				}
+
+				&.settled {
+					background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+				}
+			}
+		}
+	}
 }
 
 /* 推广工具卡片 */
@@ -597,6 +706,127 @@ export default {
 			.member-time {
 				font-size: 24rpx;
 				color: #999;
+			}
+		}
+	}
+}
+
+/* 分销订单列表 */
+.orders-card {
+	background: #fff;
+	border-radius: 20rpx;
+	padding: 40rpx;
+	margin-bottom: 20rpx;
+
+	.section-title {
+		display: flex;
+		align-items: center;
+		font-size: 32rpx;
+		font-weight: bold;
+		margin-bottom: 30rpx;
+		color: #333;
+
+		.icon {
+			margin-right: 10rpx;
+			font-size: 36rpx;
+		}
+
+		.count {
+			margin-left: 10rpx;
+			font-size: 24rpx;
+			color: #999;
+			font-weight: normal;
+		}
+	}
+
+	.orders-list {
+		.order-item {
+			background: #f8f9fa;
+			border-radius: 12rpx;
+			padding: 24rpx;
+			margin-bottom: 20rpx;
+
+			&:last-child {
+				margin-bottom: 0;
+			}
+
+			.order-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				margin-bottom: 15rpx;
+
+				.order-no {
+					font-size: 24rpx;
+					color: #666;
+				}
+
+				.order-status {
+					font-size: 22rpx;
+					color: #ff9800;
+					background: rgba(255, 152, 0, 0.1);
+					padding: 4rpx 12rpx;
+					border-radius: 10rpx;
+
+					&.settled {
+						color: #22c55e;
+						background: rgba(34, 197, 94, 0.1);
+					}
+				}
+			}
+
+			.order-body {
+				margin-bottom: 15rpx;
+
+				.buyer-info {
+					display: flex;
+					align-items: center;
+					margin-bottom: 12rpx;
+
+					.buyer-avatar {
+						width: 50rpx;
+						height: 50rpx;
+						border-radius: 50%;
+						margin-right: 12rpx;
+					}
+
+					.buyer-name {
+						font-size: 26rpx;
+						color: #333;
+					}
+				}
+
+				.order-amount, .commission-amount {
+					display: flex;
+					justify-content: space-between;
+					align-items: center;
+					font-size: 26rpx;
+					padding: 8rpx 0;
+
+					.label {
+						color: #666;
+					}
+
+					.value {
+						color: #333;
+						font-weight: bold;
+
+						&.highlight {
+							color: #ff9800;
+							font-size: 30rpx;
+						}
+					}
+				}
+			}
+
+			.order-footer {
+				padding-top: 12rpx;
+				border-top: 1rpx solid #e0e0e0;
+
+				.order-time {
+					font-size: 22rpx;
+					color: #999;
+				}
 			}
 		}
 	}

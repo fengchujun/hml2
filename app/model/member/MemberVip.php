@@ -523,6 +523,55 @@ class MemberVip extends BaseModel
             $preserve_progress = min(100, round($member['year_consumption'] / $preserve_target * 100, 2));
         }
 
+        // 7. 计算佣金统计（未结算和已结算）
+        $unsettled_commission = 0;
+        $settled_commission = 0;
+
+        // 未结算佣金
+        $unsettled_result = model('order')->where([
+            ['distributor_id', '=', $member_id],
+            ['site_id', '=', $site_id],
+            ['commission_settled', '=', 0]
+        ])->sum('commission_amount');
+        $unsettled_commission = $unsettled_result ? floatval($unsettled_result) : 0;
+
+        // 已结算佣金
+        $settled_result = model('order')->where([
+            ['distributor_id', '=', $member_id],
+            ['site_id', '=', $site_id],
+            ['commission_settled', '=', 1]
+        ])->sum('commission_amount');
+        $settled_commission = $settled_result ? floatval($settled_result) : 0;
+
+        // 8. 获取分销订单列表（最近20条）
+        $distribution_orders = model('order')->getList([
+            ['distributor_id', '=', $member_id],
+            ['site_id', '=', $site_id]
+        ], 'order_id, order_no, order_money, commission_amount, commission_settled, buyer_member_id, order_status, create_time', 'create_time desc', 1, 20);
+
+        // 处理订单列表返回结果
+        $orders_list = [];
+        if (is_array($distribution_orders)) {
+            if (isset($distribution_orders['data'])) {
+                $orders_list = $distribution_orders['data'];
+            } elseif (isset($distribution_orders['list'])) {
+                $orders_list = $distribution_orders['list'];
+            } elseif (isset($distribution_orders[0])) {
+                $orders_list = $distribution_orders;
+            }
+        }
+
+        // 为订单列表添加买家昵称
+        if (!empty($orders_list)) {
+            foreach ($orders_list as $key => $order) {
+                $buyer = model('member')->getInfo([
+                    ['member_id', '=', $order['buyer_member_id']]
+                ], 'nickname, headimg');
+                $orders_list[$key]['buyer_nickname'] = $buyer['nickname'] ?? '';
+                $orders_list[$key]['buyer_headimg'] = $buyer['headimg'] ?? '';
+            }
+        }
+
         return $this->success([
             'member_info' => [
                 'member_id' => $member['member_id'] ?? 0,
@@ -550,7 +599,13 @@ class MemberVip extends BaseModel
                 'vip_member_count' => (int)$vip_member_count,
                 'total_count' => (int)($normal_member_count + $vip_member_count)
             ],
-            'recommended_members' => is_array($recommended_members) ? $recommended_members : []
+            'recommended_members' => is_array($recommended_members) ? $recommended_members : [],
+            'commission_info' => [
+                'unsettled_commission' => (float)$unsettled_commission,
+                'settled_commission' => (float)$settled_commission,
+                'total_commission' => (float)($unsettled_commission + $settled_commission)
+            ],
+            'distribution_orders' => is_array($orders_list) ? $orders_list : []
         ]);
     }
 
