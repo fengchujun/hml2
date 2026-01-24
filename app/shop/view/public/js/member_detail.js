@@ -775,7 +775,11 @@ function saveInviteQuota(e) {
  * 编辑分销员等级
  */
 function editFxLevel(event) {
-	var fx_level_text = $(event).prev('span').text();
+	var fx_level_text = $.trim($(event).prev('span').text());
+	// 文本到值的映射
+	var text_to_value = {'无': '0', '一级': '1', '二级': '2', '三级': '3'};
+	var current_level = text_to_value[fx_level_text] || '0';
+
 	var html = `<div class="layui-form form-wrap">
 					<div class="layui-form-item">
 						<label class="layui-form-label" style="width:auto">当前等级：</label>
@@ -787,10 +791,10 @@ function editFxLevel(event) {
 						<label class="layui-form-label" style="width:auto"><span class="required">*</span>分销员等级：</label>
 						<div class="layui-input-block" style="margin-left: 0;">
 							<select name="fx_level" class="layui-input len-mid">
-								<option value="0">无</option>
-								<option value="1">一级</option>
-								<option value="2">二级</option>
-								<option value="3">三级</option>
+								<option value="0" ` + (current_level == '0' ? 'selected' : '') + `>无</option>
+								<option value="1" ` + (current_level == '1' ? 'selected' : '') + `>一级</option>
+								<option value="2" ` + (current_level == '2' ? 'selected' : '') + `>二级</option>
+								<option value="3" ` + (current_level == '3' ? 'selected' : '') + `>三级</option>
 							</select>
 						</div>
 					</div>
@@ -824,7 +828,11 @@ function editFxLevel(event) {
  * 编辑所属仓库
  */
 function editWarehouse(event) {
-	var warehouse_text = $(event).prev('span').text();
+	var warehouse_text = $.trim($(event).prev('span').text());
+	// 文本到值的映射
+	var text_to_value = {'无': '0', '深圳': '1', '河源': '2'};
+	var current_warehouse = text_to_value[warehouse_text] || '0';
+
 	var html = `<div class="layui-form form-wrap">
 					<div class="layui-form-item">
 						<label class="layui-form-label" style="width:auto">当前仓库：</label>
@@ -836,9 +844,9 @@ function editWarehouse(event) {
 						<label class="layui-form-label" style="width:auto"><span class="required">*</span>所属仓库：</label>
 						<div class="layui-input-block" style="margin-left: 0;">
 							<select name="warehouse_id" class="layui-input len-mid">
-								<option value="0">无</option>
-								<option value="1">深圳</option>
-								<option value="2">河源</option>
+								<option value="0" ` + (current_warehouse == '0' ? 'selected' : '') + `>无</option>
+								<option value="1" ` + (current_warehouse == '1' ? 'selected' : '') + `>深圳</option>
+								<option value="2" ` + (current_warehouse == '2' ? 'selected' : '') + `>河源</option>
 							</select>
 						</div>
 					</div>
