@@ -547,29 +547,19 @@ class MemberVip extends BaseModel
         $distribution_orders = model('order')->getList([
             ['distributor_id', '=', $member_id],
             ['site_id', '=', $site_id]
-        ], 'order_id, order_no, order_money, commission_amount, commission_settled, buyer_member_id, order_status, create_time', 'create_time desc', 1, 20);
-
-        // 处理订单列表返回结果
-        $orders_list = [];
-        if (is_array($distribution_orders)) {
-            if (isset($distribution_orders['data'])) {
-                $orders_list = $distribution_orders['data'];
-            } elseif (isset($distribution_orders['list'])) {
-                $orders_list = $distribution_orders['list'];
-            } elseif (isset($distribution_orders[0])) {
-                $orders_list = $distribution_orders;
-            }
-        }
+        ], 'order_id, order_no, order_money, commission_amount, commission_settled, buyer_member_id, order_status, create_time', 'create_time desc', 'a', [], '', 20);
 
         // 为订单列表添加买家昵称
-        if (!empty($orders_list)) {
-            foreach ($orders_list as $key => $order) {
+        $orders_list = [];
+        if (!empty($distribution_orders) && is_array($distribution_orders)) {
+            foreach ($distribution_orders as $key => $order) {
                 $buyer = model('member')->getInfo([
                     ['member_id', '=', $order['buyer_member_id']]
                 ], 'nickname, headimg');
-                $orders_list[$key]['buyer_nickname'] = $buyer['nickname'] ?? '';
-                $orders_list[$key]['buyer_headimg'] = $buyer['headimg'] ?? '';
+                $distribution_orders[$key]['buyer_nickname'] = $buyer['nickname'] ?? '';
+                $distribution_orders[$key]['buyer_headimg'] = $buyer['headimg'] ?? '';
             }
+            $orders_list = $distribution_orders;
         }
 
         return $this->success([
