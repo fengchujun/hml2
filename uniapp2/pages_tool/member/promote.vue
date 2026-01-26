@@ -92,11 +92,11 @@
 				<view class="commission-section">
 					<view class="commission-grid">
 						<view class="commission-item">
-							<text class="amount">¥{{ commissionInfo.unsettled_commission.toFixed(2) }}</text>
+							<text class="amount">¥{{ (commissionInfo.unsettled_commission || 0).toFixed(2) }}</text>
 							<text class="label">未结算佣金</text>
 						</view>
 						<view class="commission-item settled">
-							<text class="amount">¥{{ commissionInfo.settled_commission.toFixed(2) }}</text>
+							<text class="amount">¥{{ (commissionInfo.settled_commission || 0).toFixed(2) }}</text>
 							<text class="label">已结算佣金</text>
 						</view>
 					</view>
@@ -143,11 +143,11 @@
 			</view>
 
 			<!-- 推荐会员列表 -->
-			<view class="members-card" v-if="recommendedMembers.length > 0">
+			<view class="members-card" v-if="recommendedMembers && recommendedMembers.length > 0">
 				<view class="section-title">
 					<text class="icon">👥</text>
 					<text>推荐会员</text>
-					<text class="count">（{{ stats.total_count }}人）</text>
+					<text class="count">（{{ recommendedMembers.length }}人）</text>
 				</view>
 				<view class="members-list">
 					<view class="member-item" v-for="(member, index) in recommendedMembers" :key="member.member_id">
@@ -166,7 +166,7 @@
 			</view>
 
 			<!-- 分销订单列表 -->
-			<view class="orders-card" v-if="distributionOrders.length > 0">
+			<view class="orders-card" v-if="distributionOrders && distributionOrders.length > 0">
 				<view class="section-title">
 					<text class="icon">📦</text>
 					<text>分销订单</text>
@@ -185,15 +185,15 @@
 								<image :src="$util.img(order.buyer_headimg || 'public/uniapp/default_head.png')"
 									class="buyer-avatar"
 									mode="aspectFill"></image>
-								<text class="buyer-name">{{ order.buyer_nickname }}</text>
+								<text class="buyer-name">{{ order.buyer_nickname || '未知' }}</text>
 							</view>
 							<view class="order-amount">
 								<text class="label">订单金额：</text>
-								<text class="value">¥{{ order.order_money }}</text>
+								<text class="value">¥{{ order.order_money || '0.00' }}</text>
 							</view>
 							<view class="commission-amount">
 								<text class="label">佣金：</text>
-								<text class="value highlight">¥{{ order.commission_amount }}</text>
+								<text class="value highlight">¥{{ order.commission_amount || '0.00' }}</text>
 							</view>
 						</view>
 						<view class="order-footer">
@@ -277,20 +277,42 @@ export default {
 				url: '/api/membervip/getPromoteStats',
 				success: res => {
 					uni.hideLoading();
-					if (res.code >= 0) {
-						this.memberInfo = res.data.member_info;
-						this.quotaInfo = res.data.quota_info;
-						this.preserveInfo = res.data.preserve_info;
-						this.stats = res.data.stats;
-						this.recommendedMembers = res.data.recommended_members || [];
-						this.commissionInfo = res.data.commission_info || {
-							unsettled_commission: 0,
-							settled_commission: 0,
-							total_commission: 0
-						};
-						this.distributionOrders = res.data.distribution_orders || [];
+					if (res.code >= 0 && res.data) {
+						// 确保所有数据正确赋值
+						this.memberInfo = res.data.member_info || {};
+						this.quotaInfo = res.data.quota_info || {};
+						this.preserveInfo = res.data.preserve_info || {};
+						this.stats = res.data.stats || {};
+
+						// 推荐会员列表
+						if (res.data.recommended_members && Array.isArray(res.data.recommended_members)) {
+							this.recommendedMembers = res.data.recommended_members;
+							console.log('推荐会员列表加载成功:', this.recommendedMembers.length, '人');
+						} else {
+							this.recommendedMembers = [];
+						}
+
+						// 佣金信息
+						if (res.data.commission_info) {
+							this.commissionInfo = res.data.commission_info;
+							console.log('佣金信息:', this.commissionInfo);
+						} else {
+							this.commissionInfo = {
+								unsettled_commission: 0,
+								settled_commission: 0,
+								total_commission: 0
+							};
+						}
+
+						// 分销订单列表
+						if (res.data.distribution_orders && Array.isArray(res.data.distribution_orders)) {
+							this.distributionOrders = res.data.distribution_orders;
+							console.log('分销订单列表加载成功:', this.distributionOrders.length, '笔');
+						} else {
+							this.distributionOrders = [];
+						}
 					} else {
-						this.$util.showToast({ title: res.message });
+						this.$util.showToast({ title: res.message || '加载失败' });
 					}
 				},
 				fail: () => {
