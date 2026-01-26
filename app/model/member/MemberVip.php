@@ -528,19 +528,19 @@ class MemberVip extends BaseModel
         $settled_commission = 0;
 
         // 未结算佣金
-        $unsettled_result = model('order')->where([
+        $unsettled_result = model('order')->getSum([
             ['distributor_id', '=', $member_id],
             ['site_id', '=', $site_id],
             ['commission_settled', '=', 0]
-        ])->sum('commission_amount');
+        ], 'commission_amount');
         $unsettled_commission = $unsettled_result ? floatval($unsettled_result) : 0;
 
         // 已结算佣金
-        $settled_result = model('order')->where([
+        $settled_result = model('order')->getSum([
             ['distributor_id', '=', $member_id],
             ['site_id', '=', $site_id],
             ['commission_settled', '=', 1]
-        ])->sum('commission_amount');
+        ], 'commission_amount');
         $settled_commission = $settled_result ? floatval($settled_result) : 0;
 
         // 8. 获取分销订单列表（最近20条）
