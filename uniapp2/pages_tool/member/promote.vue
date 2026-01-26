@@ -160,7 +160,7 @@
 								{{ member.member_level_name }}
 							</text>
 						</view>
-						<text class="member-time">{{ $util.formatTime(member.reg_time, 'Y-m-d') }}</text>
+						<text class="member-time">{{ formatTime(member.reg_time, 'Y-m-d') }}</text>
 					</view>
 				</view>
 			</view>
@@ -197,7 +197,7 @@
 							</view>
 						</view>
 						<view class="order-footer">
-							<text class="order-time">{{ $util.formatTime(order.create_time, 'Y-m-d H:i:s') }}</text>
+							<text class="order-time">{{ formatTime(order.create_time, 'Y-m-d H:i:s') }}</text>
 						</view>
 					</view>
 				</view>
@@ -320,6 +320,14 @@ export default {
 					this.$util.showToast({ title: '加载失败，请重试' });
 				}
 			});
+		},
+
+		/**
+		 * 格式化时间
+		 */
+		formatTime(timestamp, format = 'Y-m-d H:i:s') {
+			if (!timestamp) return '-';
+			return this.$util.formatTime(timestamp, format);
 		}
 	}
 };
