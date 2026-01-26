@@ -500,6 +500,10 @@ class MemberVip extends BaseModel
             ['is_delete', '=', 0]
         ], 'member_id, nickname, headimg, member_level, member_level_name, reg_time', 'reg_time desc');
 
+        // 调试日志
+        file_put_contents('/tmp/promote_debug.log', date('Y-m-d H:i:s') . ' - 推荐会员查询 member_id=' . $member_id . "\n", FILE_APPEND);
+        file_put_contents('/tmp/promote_debug.log', '推荐会员查询结果: ' . var_export($recommended_members_result, true) . "\n", FILE_APPEND);
+
         // 处理返回结果（getList可能返回数组结构）
         $recommended_members = [];
         if (is_array($recommended_members_result)) {
@@ -509,6 +513,8 @@ class MemberVip extends BaseModel
                 $recommended_members = $recommended_members_result;
             }
         }
+
+        file_put_contents('/tmp/promote_debug.log', '处理后的推荐会员列表: ' . count($recommended_members) . ' 人' . "\n", FILE_APPEND);
 
         // 5. 计算剩余名额
         $available_quota = 0;
@@ -543,11 +549,18 @@ class MemberVip extends BaseModel
         ], 'commission_amount');
         $settled_commission = $settled_result ? floatval($settled_result) : 0;
 
+        // 调试日志
+        file_put_contents('/tmp/promote_debug.log', date('Y-m-d H:i:s') . ' - member_id=' . $member_id . ', site_id=' . $site_id . "\n", FILE_APPEND);
+        file_put_contents('/tmp/promote_debug.log', '未结算佣金查询结果: ' . var_export($unsettled_result, true) . ' => ' . $unsettled_commission . "\n", FILE_APPEND);
+        file_put_contents('/tmp/promote_debug.log', '已结算佣金查询结果: ' . var_export($settled_result, true) . ' => ' . $settled_commission . "\n", FILE_APPEND);
+
         // 8. 获取分销订单列表（最近20条）
         $distribution_orders = model('order')->getList([
             ['distributor_id', '=', $member_id],
             ['site_id', '=', $site_id]
         ], 'order_id, order_no, order_money, commission_amount, commission_settled, member_id, order_status, create_time', 'create_time desc', 'a', [], '', 20);
+
+        file_put_contents('/tmp/promote_debug.log', '分销订单查询结果: ' . var_export($distribution_orders, true) . "\n", FILE_APPEND);
 
         // 为订单列表添加买家昵称
         $orders_list = [];
