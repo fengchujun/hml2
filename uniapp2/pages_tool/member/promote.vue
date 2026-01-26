@@ -327,7 +327,24 @@ export default {
 		 */
 		formatTime(timestamp, format = 'Y-m-d H:i:s') {
 			if (!timestamp) return '-';
-			return this.$util.formatTime(timestamp, format);
+
+			const date = new Date(timestamp * 1000);
+			const year = date.getFullYear();
+			const month = String(date.getMonth() + 1).padStart(2, '0');
+			const day = String(date.getDate()).padStart(2, '0');
+			const hour = String(date.getHours()).padStart(2, '0');
+			const minute = String(date.getMinutes()).padStart(2, '0');
+			const second = String(date.getSeconds()).padStart(2, '0');
+
+			if (format === 'Y-m-d') {
+				return `${year}-${month}-${day}`;
+			} else if (format === 'Y-m-d H:i:s') {
+				return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+			} else if (format === 'Y-m-d H:i') {
+				return `${year}-${month}-${day} ${hour}:${minute}`;
+			}
+
+			return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
 		}
 	}
 };
