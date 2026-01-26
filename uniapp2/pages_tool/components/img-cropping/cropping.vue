@@ -193,17 +193,25 @@ export default {
 			this.fHideImg();
 		},
 		fSelect() {
-			if (this.fSelecting) return;
+			console.log('fSelect被调用, fSelecting=', this.fSelecting);
+
+			if (this.fSelecting) {
+				console.log('正在选择中，返回');
+				return;
+			}
+
 			this.fSelecting = true;
 			setTimeout(() => {
 				this.fSelecting = false;
 			}, 500);
 
+			console.log('开始调用uni.chooseImage');
 			uni.chooseImage({
 				count: 1,
 				sizeType: ['original', 'compressed'],
 				sourceType: ['album', 'camera'],
 				success: r => {
+					console.log('chooseImage成功:', r);
 					// #ifdef MP-ALIPAY
 					uni.showLoading();
 					// #endif
@@ -258,6 +266,14 @@ export default {
 						complete() {
 							uni.hideLoading();
 						}
+					});
+				},
+				fail: err => {
+					console.error('chooseImage失败:', err);
+					uni.showToast({
+						title: '选择图片失败：' + (err.errMsg || '未知错误'),
+						icon: 'none',
+						duration: 3000
 					});
 				}
 			});

@@ -55,6 +55,15 @@
 		},
 		methods: {
 			chooseImage() {
+				console.log('chooseImage被调用');
+				console.log('$refs.imgCropping:', this.$refs.imgCropping);
+
+				if (!this.$refs.imgCropping) {
+					console.error('imgCropping组件未正确加载');
+					this.$util.showToast({ title: '组件加载失败，请重试' });
+					return;
+				}
+
 				this.$refs.imgCropping.fSelect();
 			},
 			//上传返回图片
