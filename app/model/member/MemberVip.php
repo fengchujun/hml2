@@ -547,14 +547,14 @@ class MemberVip extends BaseModel
         $distribution_orders = model('order')->getList([
             ['distributor_id', '=', $member_id],
             ['site_id', '=', $site_id]
-        ], 'order_id, order_no, order_money, commission_amount, commission_settled, buyer_member_id, order_status, create_time', 'create_time desc', 'a', [], '', 20);
+        ], 'order_id, order_no, order_money, commission_amount, commission_settled, member_id, order_status, create_time', 'create_time desc', 'a', [], '', 20);
 
         // 为订单列表添加买家昵称
         $orders_list = [];
         if (!empty($distribution_orders) && is_array($distribution_orders)) {
             foreach ($distribution_orders as $key => $order) {
                 $buyer = model('member')->getInfo([
-                    ['member_id', '=', $order['buyer_member_id']]
+                    ['member_id', '=', $order['member_id']]
                 ], 'nickname, headimg');
                 $distribution_orders[$key]['buyer_nickname'] = $buyer['nickname'] ?? '';
                 $distribution_orders[$key]['buyer_headimg'] = $buyer['headimg'] ?? '';
