@@ -493,28 +493,16 @@ class MemberVip extends BaseModel
             ['is_delete', '=', 0]
         ]);
 
-        // 4. 获取推荐的会员列表（最近20个）
+        // 4. 获取推荐的会员列表（最近20个，排除自己）
         $recommended_members_result = model('member')->getList([
             ['source_member', '=', $member_id],
             ['site_id', '=', $site_id],
-            ['is_delete', '=', 0]
-        ], 'member_id, nickname, headimg, member_level, member_level_name, reg_time', 'reg_time desc');
+            ['is_delete', '=', 0],
+            ['member_id', '<>', $member_id]  // 排除自己
+        ], 'member_id, nickname, headimg, member_level, member_level_name, reg_time', 'reg_time desc', 'a', [], '', 20);
 
-        // 调试日志
-        file_put_contents('/tmp/promote_debug.log', date('Y-m-d H:i:s') . ' - 推荐会员查询 member_id=' . $member_id . "\n", FILE_APPEND);
-        file_put_contents('/tmp/promote_debug.log', '推荐会员查询结果: ' . var_export($recommended_members_result, true) . "\n", FILE_APPEND);
-
-        // 处理返回结果（getList可能返回数组结构）
-        $recommended_members = [];
-        if (is_array($recommended_members_result)) {
-            if (isset($recommended_members_result['data'])) {
-                $recommended_members = $recommended_members_result['data'];
-            } elseif (isset($recommended_members_result[0])) {
-                $recommended_members = $recommended_members_result;
-            }
-        }
-
-        file_put_contents('/tmp/promote_debug.log', '处理后的推荐会员列表: ' . count($recommended_members) . ' 人' . "\n", FILE_APPEND);
+        // 处理返回结果（getList直接返回数组）
+        $recommended_members = is_array($recommended_members_result) ? $recommended_members_result : [];
 
         // 5. 计算剩余名额
         $available_quota = 0;
@@ -549,20 +537,13 @@ class MemberVip extends BaseModel
         ], 'commission_amount');
         $settled_commission = $settled_result ? floatval($settled_result) : 0;
 
-        // 调试日志
-        file_put_contents('/tmp/promote_debug.log', date('Y-m-d H:i:s') . ' - member_id=' . $member_id . ', site_id=' . $site_id . "\n", FILE_APPEND);
-        file_put_contents('/tmp/promote_debug.log', '未结算佣金查询结果: ' . var_export($unsettled_result, true) . ' => ' . $unsettled_commission . "\n", FILE_APPEND);
-        file_put_contents('/tmp/promote_debug.log', '已结算佣金查询结果: ' . var_export($settled_result, true) . ' => ' . $settled_commission . "\n", FILE_APPEND);
-
         // 8. 获取分销订单列表（最近20条）
         $distribution_orders = model('order')->getList([
             ['distributor_id', '=', $member_id],
             ['site_id', '=', $site_id]
         ], 'order_id, order_no, order_money, commission_amount, commission_settled, member_id, order_status, create_time', 'create_time desc', 'a', [], '', 20);
 
-        file_put_contents('/tmp/promote_debug.log', '分销订单查询结果: ' . var_export($distribution_orders, true) . "\n", FILE_APPEND);
-
-        // 为订单列表添加买家昵称
+        // 为订单列表添加买家昵称并格式化数据
         $orders_list = [];
         if (!empty($distribution_orders) && is_array($distribution_orders)) {
             foreach ($distribution_orders as $key => $order) {
@@ -571,6 +552,10 @@ class MemberVip extends BaseModel
                 ], 'nickname, headimg');
                 $distribution_orders[$key]['buyer_nickname'] = $buyer['nickname'] ?? '';
                 $distribution_orders[$key]['buyer_headimg'] = $buyer['headimg'] ?? '';
+                // 确保金额格式正确
+                $distribution_orders[$key]['order_money'] = number_format((float)$order['order_money'], 2, '.', '');
+                $distribution_orders[$key]['commission_amount'] = number_format((float)$order['commission_amount'], 2, '.', '');
+                $distribution_orders[$key]['commission_settled'] = (int)$order['commission_settled'];
             }
             $orders_list = $distribution_orders;
         }
@@ -604,9 +589,9 @@ class MemberVip extends BaseModel
             ],
             'recommended_members' => is_array($recommended_members) ? $recommended_members : [],
             'commission_info' => [
-                'unsettled_commission' => (float)$unsettled_commission,
-                'settled_commission' => (float)$settled_commission,
-                'total_commission' => (float)($unsettled_commission + $settled_commission)
+                'unsettled_commission' => round((float)$unsettled_commission, 2),
+                'settled_commission' => round((float)$settled_commission, 2),
+                'total_commission' => round((float)($unsettled_commission + $settled_commission), 2)
             ],
             'distribution_orders' => is_array($orders_list) ? $orders_list : []
         ]);
