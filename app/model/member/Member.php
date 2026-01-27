@@ -1213,9 +1213,9 @@ class Member extends BaseModel
         $seq_model = new MemberCodeSequence();
         $current_seq = $seq_model->getNextSeq($site_id, $area_code, $member_type);
 
-        // 3. 计算序号位数（总长度至少8位）
+        // 3. 计算序号位数（总长度固定12位）
         $prefix_length = strlen($area_code) + 1; // 区号 + 类型（1位）
-        $seq_length = max(8 - $prefix_length, 1); // 至少1位
+        $seq_length = max(12 - $prefix_length, 1); // 至少1位
 
         // 4. 组装编号
         $member_code = $area_code . $member_type . str_pad($current_seq, $seq_length, '0', STR_PAD_LEFT);
