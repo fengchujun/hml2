@@ -161,7 +161,17 @@ class Goods extends GoodsCommon
                 'sale_channel' => $data['sale_channel'] ?? 'all',
                 'sale_store' => $data['sale_store'] ?? 'all',
                 'is_unify_price' => $data['is_unify_price'] ?? 1,
-                'supplier_id' => $data['supplier_id'] ?? 0
+                'supplier_id' => $data['supplier_id'] ?? 0,
+                // 分销配置字段
+                'fx_level1_first_coupon' => $data['fx_level1_first_coupon'] ?? 0,
+                'fx_level1_complete_coupon' => $data['fx_level1_complete_coupon'] ?? 0,
+                'fx_level1_commission' => $data['fx_level1_commission'] ?? 0,
+                'fx_level2_first_coupon' => $data['fx_level2_first_coupon'] ?? 0,
+                'fx_level2_complete_coupon' => $data['fx_level2_complete_coupon'] ?? 0,
+                'fx_level2_commission' => $data['fx_level2_commission'] ?? 0,
+                'fx_level3_first_coupon' => $data['fx_level3_first_coupon'] ?? 0,
+                'fx_level3_complete_coupon' => $data['fx_level3_complete_coupon'] ?? 0,
+                'fx_level3_commission' => $data['fx_level3_commission'] ?? 0
             );
 
             $goods_id = model('goods')->add(array_merge($goods_data, $common_data));
@@ -409,7 +419,17 @@ class Goods extends GoodsCommon
                 'sale_channel' => $data['sale_channel'] ?? 'all',
                 'sale_store' => $data['sale_store'] ?? 'all',
                 'is_unify_price' => $data['is_unify_price'] ?? 1,
-                'supplier_id' => $data['supplier_id'] ?? 0
+                'supplier_id' => $data['supplier_id'] ?? 0,
+                // 分销配置字段
+                'fx_level1_first_coupon' => $data['fx_level1_first_coupon'] ?? 0,
+                'fx_level1_complete_coupon' => $data['fx_level1_complete_coupon'] ?? 0,
+                'fx_level1_commission' => $data['fx_level1_commission'] ?? 0,
+                'fx_level2_first_coupon' => $data['fx_level2_first_coupon'] ?? 0,
+                'fx_level2_complete_coupon' => $data['fx_level2_complete_coupon'] ?? 0,
+                'fx_level2_commission' => $data['fx_level2_commission'] ?? 0,
+                'fx_level3_first_coupon' => $data['fx_level3_first_coupon'] ?? 0,
+                'fx_level3_complete_coupon' => $data['fx_level3_complete_coupon'] ?? 0,
+                'fx_level3_commission' => $data['fx_level3_commission'] ?? 0
             );
             model('goods')->update(array_merge($goods_data, $common_data), [['goods_id', '=', $goods_id], ['goods_class', '=', $this->goods_class['id']]]);
 

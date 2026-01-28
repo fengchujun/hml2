@@ -41,7 +41,8 @@ export default {
 				bgUrl: '',
 				textImgPosLink: 'left'
 			},
-			goodsFormVal: []
+			goodsFormVal: [],
+			fxCouponCalled: false // 标记是否已经调用过分销优惠券接口
 		}
 	},
 	onLoad(data) {
@@ -62,6 +63,46 @@ export default {
 			this.$util.onSourceMember(uni.getStorageSync('source_member'));
 		}
 
+		// 处理分销商品信息（模仿source_member的处理方式）
+		if (data.source_member) {
+			// 尝试获取 goods_id，可能暂时为 0
+			let goods_id = this.goodsId || data.goods_id || 0;
+
+			// 先缓存分销信息，即使 goods_id 暂时为 0
+			uni.setStorageSync('fx_goods_info', {
+				goods_id: goods_id,
+				distributor_id: data.source_member,
+				timestamp: Date.now()
+			});
+
+			// 如果未登录，跳转到登录页，登录后自动返回当前页面
+			if (!this.storeToken) {
+				// 构建当前页面URL，包含所有参数
+				let currentPage = getCurrentPages()[getCurrentPages().length - 1];
+				let currentPath = '/' + currentPage.route;
+				let queryParams = [];
+				for (let key in data) {
+					if (data.hasOwnProperty(key)) {
+						queryParams.push(key + '=' + data[key]);
+					}
+				}
+				let currentUrl = currentPath + (queryParams.length > 0 ? '?' + queryParams.join('&') : '');
+
+				// 跳转到登录页，传递返回URL
+				this.$util.redirectTo('/pages_tool/login/index', {
+					back: encodeURIComponent(currentUrl)
+				});
+				return;
+			}
+
+			// 如果已登录且有 goods_id，立即调用后端处理分销商品访问
+			if (this.storeToken && goods_id > 0) {
+				this.handleDistributorGoodsVisit(data.source_member, goods_id);
+				this.fxCouponCalled = true; // 标记已调用
+			}
+			// 如果 goods_id 为 0，会在 handleGoodsSkuData 中更新并调用 API
+		}
+
 		// 小程序扫码进入
 		if (data.scene) {
 			var sceneParams = decodeURIComponent(data.scene);
@@ -75,6 +116,21 @@ export default {
 		}
 	},
 	onShow() {
+		// 检查是否有分销商品缓存，且用户已登录，且还没有调用过 API
+		let fx_goods_info = uni.getStorageSync('fx_goods_info');
+		if (fx_goods_info && fx_goods_info.distributor_id && this.storeToken && !this.fxCouponCalled) {
+			// 如果商品详情已经加载
+			if (this.goodsSkuDetail.goods_id > 0) {
+				// 更新缓存的 goods_id（如果需要）
+				if (fx_goods_info.goods_id == 0 || fx_goods_info.goods_id != this.goodsSkuDetail.goods_id) {
+					fx_goods_info.goods_id = this.goodsSkuDetail.goods_id;
+					uni.setStorageSync('fx_goods_info', fx_goods_info);
+				}
+				// 调用 API 获取优惠券
+				this.handleDistributorGoodsVisit(fx_goods_info.distributor_id, this.goodsSkuDetail.goods_id);
+				this.fxCouponCalled = true; // 标记已调用
+			}
+		}
 	},
 	methods: {
 		detailChangeVal(data) {
@@ -89,6 +145,22 @@ export default {
 			}
 
 			this.whetherCollection = this.goodsSkuDetail.is_collect; // 用户关注商品状态
+
+			// 处理分销商品信息：如果缓存中 goods_id 为 0，现在更新它
+			let fx_goods_info = uni.getStorageSync('fx_goods_info');
+			if (fx_goods_info && fx_goods_info.distributor_id && this.goodsSkuDetail.goods_id && !this.fxCouponCalled) {
+				// 如果缓存的 goods_id 是 0 或与当前不一致，更新它
+				if (fx_goods_info.goods_id == 0 || fx_goods_info.goods_id != this.goodsSkuDetail.goods_id) {
+					fx_goods_info.goods_id = this.goodsSkuDetail.goods_id;
+					uni.setStorageSync('fx_goods_info', fx_goods_info);
+
+					// 如果已登录，调用 API 处理分销访问
+					if (this.storeToken) {
+						this.handleDistributorGoodsVisit(fx_goods_info.distributor_id, this.goodsSkuDetail.goods_id);
+						this.fxCouponCalled = true; // 标记已调用
+					}
+				}
+			}
 
 			this.modifyGoodsInfo();
 
@@ -334,6 +406,26 @@ export default {
 				},
 				success: res => {
 					if (res.code == 0 && res.data) this.$set(this.goodsSkuDetail, 'goods_form', res.data);
+				}
+			});
+		},
+		/**
+		 * 处理分销商品访问（用户点击分销链接访问商品时调用）
+		 */
+		handleDistributorGoodsVisit(distributor_id, goods_id) {
+			this.$api.sendRequest({
+				url: '/api/goods/handleDistributorVisit',
+				data: {
+					distributor_id: distributor_id,
+					goods_id: goods_id
+				},
+				success: res => {
+					// 处理成功，可能返回已发放的优惠券信息
+					if (res.code >= 0 && res.data && res.data.coupon_sent) {
+						this.$util.showToast({
+							title: '已获得优惠券'
+						});
+					}
 				}
 			});
 		}

@@ -42,13 +42,19 @@ class OrderComplete extends BaseModel
     {
         $order_info = $data['order_info'];
         $order_id = $order_info['order_id'];
+
+        file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - OrderComplete event 方法被调用: order_id=' . $order_id . "\n", FILE_APPEND);
+
         /******************************************************* 会员账户相关 **********************************************************/
         //修改用户表order_complete_money和order_complete_num
         model('member')->setInc([['member_id', '=', $order_info['member_id']]], 'order_complete_money', $order_info['order_money'] - $order_info['refund_money']);
         model('member')->setInc([['member_id', '=', $order_info['member_id']]], 'order_complete_num');
 
         /******************************************************* 插件相关 **********************************************************/
+        file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - 准备触发 OrderComplete 事件: order_id=' . $order_id . "\n", FILE_APPEND);
         event('OrderComplete', ['order_id' => $order_id]);
+        file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - OrderComplete 事件触发完成' . "\n", FILE_APPEND);
+
         return $this->success();
     }
 

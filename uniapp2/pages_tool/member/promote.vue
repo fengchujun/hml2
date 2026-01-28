@@ -67,12 +67,12 @@
 				</view>
 			</view>
 
-			<!-- 推广统计 -->
+			
 			<view class="stats-card">
 				<view class="section-title">
-					<text class="icon">📊</text>
-					<text>推广统计</text>
-				</view>
+					
+					<text>佣金统计</text>
+				</view> <!-- 
 				<view class="stats-grid">
 					<view class="stat-item">
 						<text class="num">{{ stats.total_count }}</text>
@@ -86,17 +86,31 @@
 						<text class="num">{{ stats.normal_member_count }}</text>
 						<text class="label">普通会员</text>
 					</view>
+				</view>  -->
+
+				<!-- 佣金统计 -->
+				<view class="commission-section">
+					<view class="commission-grid">
+						<view class="commission-item">
+							<text class="amount">¥{{ (commissionInfo.unsettled_commission || 0).toFixed(2) }}</text>
+							<text class="label">未结算佣金</text>
+						</view>
+						<view class="commission-item settled">
+							<text class="amount">¥{{ (commissionInfo.settled_commission || 0).toFixed(2) }}</text>
+							<text class="label">已结算佣金</text>
+						</view>
+					</view>
 				</view>
 			</view>
 
-			<!-- 推广工具 -->
+			<!-- 
 			<view class="tools-card">
 				<view class="section-title">
 					<text class="icon">🎁</text>
 					<text>推广工具</text>
-				</view>
+				</view> -->
 
-				<!-- 小程序码 -->
+				<!--  
 				<view class="qrcode-section">
 					<view class="qrcode-box">
 						<image v-if="memberInfo.share_qrcode"
@@ -110,30 +124,30 @@
 					<view class="qrcode-tip">
 						<text>长按保存小程序码，分享给好友扫码</text>
 					</view>
-				</view>
+				</view>小程序码 -->
 
-				<!-- 引导图片（预留位置，您自己添加） -->
+				<!-- 
 				<view class="guide-image-section">
 					<image src="/static/images/promote_guide.png"
 						mode="widthFix"
 						class="guide-img"
 						v-if="false"></image>
-					<!-- TODO: 您可以在这里添加引导转发的图片 -->
-				</view>
+					
+				</view> 引导图片（预留位置，您自己添加） -->
 
-				<!-- 分享按钮 -->
+				<!-- 
 				<button open-type="share" class="share-btn">
 					<text class="iconfont icon-share"></text>
 					<text>立即分享给好友</text>
 				</button>
-			</view>
+			</view>  分享按钮 -->
 
 			<!-- 推荐会员列表 -->
-			<view class="members-card" v-if="recommendedMembers.length > 0">
+			<view class="members-card" v-if="recommendedMembers && recommendedMembers.length > 0">
 				<view class="section-title">
 					<text class="icon">👥</text>
 					<text>推荐会员</text>
-					<text class="count">（{{ stats.total_count }}人）</text>
+					<text class="count">（{{ recommendedMembers.length }}人）</text>
 				</view>
 				<view class="members-list">
 					<view class="member-item" v-for="(member, index) in recommendedMembers" :key="member.member_id">
@@ -146,18 +160,56 @@
 								{{ member.member_level_name }}
 							</text>
 						</view>
-						<text class="member-time">{{ $util.formatTime(member.reg_time, 'Y-m-d') }}</text>
+						<text class="member-time">{{ formatTime(member.reg_time, 'Y-m-d') }}</text>
 					</view>
 				</view>
 			</view>
 
-			<!-- 普通会员引导卡片 -->
+			<!-- 分销订单列表 -->
+			<view class="orders-card" v-if="distributionOrders && distributionOrders.length > 0">
+				<view class="section-title">
+					<text class="icon">📦</text>
+					<text>分销订单</text>
+					<text class="count">（最近{{ distributionOrders.length }}笔）</text>
+				</view>
+				<view class="orders-list">
+					<view class="order-item" v-for="(order, index) in distributionOrders" :key="order.order_id">
+						<view class="order-header">
+							<text class="order-no">订单号：{{ order.order_no }}</text>
+							<text class="order-status" :class="{'settled': order.commission_settled == 1}">
+								{{ order.commission_settled == 1 ? '已结算' : '未结算' }}
+							</text>
+						</view>
+						<view class="order-body">
+							<!-- <view class="buyer-info">
+								<image :src="$util.img(order.buyer_headimg || 'public/uniapp/default_head.png')"
+									class="buyer-avatar"
+									mode="aspectFill"></image>
+								<text class="buyer-name">{{ order.buyer_nickname || '未知' }}</text>
+							</view>-->
+							<view class="order-amount">
+								<text class="label">订单金额：</text>
+								<text class="value">¥{{ order.order_money || '0.00' }}</text>
+							</view>
+							<view class="commission-amount">
+								<text class="label">佣金：</text>
+								<text class="value highlight">¥{{ order.commission_amount || '0.00' }}</text>
+							</view>
+						</view>
+						<view class="order-footer">
+							<text class="order-time">{{ formatTime(order.create_time, 'Y-m-d H:i:s') }}</text>
+						</view>
+					</view>
+				</view>
+			</view>
+
+			<!-- 
 			<view class="guide-card" v-if="!memberInfo.is_vip">
 				<view class="guide-content">
 					<text class="guide-title">🌟 升级特邀会员</text>
 					<text class="guide-desc">通过特邀会员邀请，成为特邀会员，享受更多权益！</text>
 				</view>
-			</view>
+			</view>普通会员引导卡片 -->
 		</view>
 	</scroll-view>
 </template>
@@ -189,7 +241,13 @@ export default {
 				vip_member_count: 0,
 				normal_member_count: 0
 			},
-			recommendedMembers: []
+			recommendedMembers: [],
+			commissionInfo: {
+				unsettled_commission: 0,
+				settled_commission: 0,
+				total_commission: 0
+			},
+			distributionOrders: []
 		};
 	},
 	onLoad() {
@@ -219,14 +277,42 @@ export default {
 				url: '/api/membervip/getPromoteStats',
 				success: res => {
 					uni.hideLoading();
-					if (res.code >= 0) {
-						this.memberInfo = res.data.member_info;
-						this.quotaInfo = res.data.quota_info;
-						this.preserveInfo = res.data.preserve_info;
-						this.stats = res.data.stats;
-						this.recommendedMembers = res.data.recommended_members || [];
+					if (res.code >= 0 && res.data) {
+						// 确保所有数据正确赋值
+						this.memberInfo = res.data.member_info || {};
+						this.quotaInfo = res.data.quota_info || {};
+						this.preserveInfo = res.data.preserve_info || {};
+						this.stats = res.data.stats || {};
+
+						// 推荐会员列表
+						if (res.data.recommended_members && Array.isArray(res.data.recommended_members)) {
+							this.recommendedMembers = res.data.recommended_members;
+							console.log('推荐会员列表加载成功:', this.recommendedMembers.length, '人');
+						} else {
+							this.recommendedMembers = [];
+						}
+
+						// 佣金信息
+						if (res.data.commission_info) {
+							this.commissionInfo = res.data.commission_info;
+							console.log('佣金信息:', this.commissionInfo);
+						} else {
+							this.commissionInfo = {
+								unsettled_commission: 0,
+								settled_commission: 0,
+								total_commission: 0
+							};
+						}
+
+						// 分销订单列表
+						if (res.data.distribution_orders && Array.isArray(res.data.distribution_orders)) {
+							this.distributionOrders = res.data.distribution_orders;
+							console.log('分销订单列表加载成功:', this.distributionOrders.length, '笔');
+						} else {
+							this.distributionOrders = [];
+						}
 					} else {
-						this.$util.showToast({ title: res.message });
+						this.$util.showToast({ title: res.message || '加载失败' });
 					}
 				},
 				fail: () => {
@@ -234,6 +320,31 @@ export default {
 					this.$util.showToast({ title: '加载失败，请重试' });
 				}
 			});
+		},
+
+		/**
+		 * 格式化时间
+		 */
+		formatTime(timestamp, format = 'Y-m-d H:i:s') {
+			if (!timestamp) return '-';
+
+			const date = new Date(timestamp * 1000);
+			const year = date.getFullYear();
+			const month = String(date.getMonth() + 1).padStart(2, '0');
+			const day = String(date.getDate()).padStart(2, '0');
+			const hour = String(date.getHours()).padStart(2, '0');
+			const minute = String(date.getMinutes()).padStart(2, '0');
+			const second = String(date.getSeconds()).padStart(2, '0');
+
+			if (format === 'Y-m-d') {
+				return `${year}-${month}-${day}`;
+			} else if (format === 'Y-m-d H:i:s') {
+				return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+			} else if (format === 'Y-m-d H:i') {
+				return `${year}-${month}-${day} ${hour}:${minute}`;
+			}
+
+			return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
 		}
 	}
 };
@@ -251,7 +362,7 @@ export default {
 
 /* 头部信息卡片 */
 .header-card {
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	background: linear-gradient(135deg, #cfaf70 0%, #cfaf70 100%);
 	border-radius: 20rpx;
 	padding: 40rpx;
 	color: #fff;
@@ -436,6 +547,51 @@ export default {
 			}
 		}
 	}
+
+	.commission-section {
+		margin-top: 40rpx;
+		padding-top: 40rpx;
+		border-top: 1rpx solid #f0f0f0;
+
+		.commission-grid {
+			display: flex;
+			justify-content: space-around;
+
+			.commission-item {
+				flex: 1;
+				text-align: center;
+				padding: 30rpx 20rpx;
+				background: linear-gradient(135deg, #ffa726 0%, #cfaf70 100%);
+				border-radius: 16rpx;
+				margin: 0 10rpx;
+
+				.amount {
+					display: block;
+					font-size: 44rpx;
+					font-weight: bold;
+					color: #fff;
+					margin-bottom: 10rpx;
+				}
+
+				.label {
+					font-size: 24rpx;
+					color: rgba(255, 255, 255, 0.9);
+				}
+
+				&:first-child {
+					margin-left: 0;
+				}
+
+				&:last-child {
+					margin-right: 0;
+				}
+
+				&.settled {
+					background: linear-gradient(135deg, #4ade80 0%, #cfaf70 100%);
+				}
+			}
+		}
+	}
 }
 
 /* 推广工具卡片 */
@@ -597,6 +753,127 @@ export default {
 			.member-time {
 				font-size: 24rpx;
 				color: #999;
+			}
+		}
+	}
+}
+
+/* 分销订单列表 */
+.orders-card {
+	background: #fff;
+	border-radius: 20rpx;
+	padding: 40rpx;
+	margin-bottom: 20rpx;
+
+	.section-title {
+		display: flex;
+		align-items: center;
+		font-size: 32rpx;
+		font-weight: bold;
+		margin-bottom: 30rpx;
+		color: #333;
+
+		.icon {
+			margin-right: 10rpx;
+			font-size: 36rpx;
+		}
+
+		.count {
+			margin-left: 10rpx;
+			font-size: 24rpx;
+			color: #999;
+			font-weight: normal;
+		}
+	}
+
+	.orders-list {
+		.order-item {
+			background: #f8f9fa;
+			border-radius: 12rpx;
+			padding: 24rpx;
+			margin-bottom: 20rpx;
+
+			&:last-child {
+				margin-bottom: 0;
+			}
+
+			.order-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				margin-bottom: 15rpx;
+
+				.order-no {
+					font-size: 24rpx;
+					color: #666;
+				}
+
+				.order-status {
+					font-size: 22rpx;
+					color: #cfaf70;
+					background: rgba(255, 152, 0, 0.1);
+					padding: 4rpx 12rpx;
+					border-radius: 10rpx;
+
+					&.settled {
+						color: #22c55e;
+						background: rgba(34, 197, 94, 0.1);
+					}
+				}
+			}
+
+			.order-body {
+				margin-bottom: 15rpx;
+
+				.buyer-info {
+					display: flex;
+					align-items: center;
+					margin-bottom: 12rpx;
+
+					.buyer-avatar {
+						width: 50rpx;
+						height: 50rpx;
+						border-radius: 50%;
+						margin-right: 12rpx;
+					}
+
+					.buyer-name {
+						font-size: 26rpx;
+						color: #333;
+					}
+				}
+
+				.order-amount, .commission-amount {
+					display: flex;
+					justify-content: space-between;
+					align-items: center;
+					font-size: 26rpx;
+					padding: 8rpx 0;
+
+					.label {
+						color: #666;
+					}
+
+					.value {
+						color: #333;
+						font-weight: bold;
+
+						&.highlight {
+							color: #cfaf70;
+							font-size: 30rpx;
+						}
+					}
+				}
+			}
+
+			.order-footer {
+				padding-top: 12rpx;
+				border-top: 1rpx solid #e0e0e0;
+
+				.order-time {
+					font-size: 22rpx;
+					color: #999;
+				}
 			}
 		}
 	}

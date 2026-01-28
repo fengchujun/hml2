@@ -373,6 +373,8 @@ class OrderCommon extends BaseModel
      */
     public function orderComplete($order_id)
     {
+        file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - orderComplete 方法被调用: order_id=' . $order_id . "\n", FILE_APPEND);
+
         $cache_name = 'order_complete_execute_' . $order_id;
         if(Cache::get($cache_name)) return $this->success();
         Cache::set($cache_name, 1);
@@ -382,10 +384,13 @@ class OrderCommon extends BaseModel
             $order_condition = [ [ 'order_id', '=', $order_id ] ];
             $order_info = model('order')->getInfo($order_condition, '*');
             if (empty($order_info)) {
+                file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - orderComplete 订单数据缺失: order_id=' . $order_id . "\n", FILE_APPEND);
                 Cache::delete($cache_name);
                 return $this->success(['message' => '订单数据缺失']);
             }
+            file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - orderComplete 当前订单状态: order_status=' . $order_info['order_status'] . "\n", FILE_APPEND);
             if (!in_array($order_info['order_status'], [self::ORDER_TAKE_DELIVERY, self::ORDER_VERIFYED])) {
+                file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - orderComplete 订单不是已收货状态: order_status=' . $order_info['order_status'] . "\n", FILE_APPEND);
                 Cache::delete($cache_name);
                 return $this->success(['message' => '订单不是已收货状态或已核销状态']);
             }
@@ -414,12 +419,14 @@ class OrderCommon extends BaseModel
             } else {
                 $order_data[ 'is_enable_refund' ] = 0;
             }
+            file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - orderComplete 准备更新订单状态为已完成: order_status=' . $order_data['order_status'] . "\n", FILE_APPEND);
             $res = model('order')->update($order_data, $order_condition);
             /******************************************************* 订单退款操作相关 **********************************************************/
             //订单项移除可退款操作
             $order_refund_model = new OrderRefund();
             $order_refund_model->removeOrderGoodsRefundAction($order_condition);
 
+            file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - orderComplete 准备调用 OrderComplete::event: order_id=' . $order_id . "\n", FILE_APPEND);
             //关键业务
             ( new OrderComplete() )->event([
                 'order_info' => $order_info,
@@ -430,8 +437,10 @@ class OrderCommon extends BaseModel
             ]);
 
             Cache::delete($cache_name);
+            file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - orderComplete 执行完成: order_id=' . $order_id . "\n", FILE_APPEND);
             return $this->success($res);
         }catch(\Exception $e){
+            file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - orderComplete 捕获异常: ' . $e->getMessage() . ', file: ' . $e->getFile() . ', line: ' . $e->getLine() . "\n", FILE_APPEND);
             Cache::delete($cache_name);
             return $this->error(['file' => $e->getFile(), 'line' => $e->getLine(), 'message' => $e->getMessage()], '订单完成捕获错误');
         }
@@ -919,6 +928,11 @@ class OrderCommon extends BaseModel
             model('order')->update($order_data, [ [ 'order_id', '=', $order_id ] ]);
 
             model('order')->commit();
+
+            // 立即发放分销完成优惠券
+            file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - orderCommonTakeDelivery 确认收货后准备发放优惠券: order_id=' . $order_id . "\n", FILE_APPEND);
+            $this->sendDistributionCompleteCoupon($order_id, $order_info['member_id'], $order_info['site_id']);
+
             //自动完成事件
             OrderCron::complete(['order_id' => $order_id, 'site_id' => $order_info['site_id']]);
             // 小程序确认收货提醒、视频号接口返回信息
@@ -1642,5 +1656,60 @@ class OrderCommon extends BaseModel
             }
         }
         return $order_info;
+    }
+
+    /**
+     * 发放分销完成优惠券
+     * @param int $order_id 订单ID
+     * @param int $member_id 会员ID
+     * @param int $site_id 站点ID
+     */
+    private function sendDistributionCompleteCoupon($order_id, $member_id, $site_id)
+    {
+        try {
+            file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - sendDistributionCompleteCoupon 开始: order_id=' . $order_id . ', member_id=' . $member_id . ', site_id=' . $site_id . "\n", FILE_APPEND);
+
+            // 读取订单的分销完成优惠券配置
+            $order_info = model('order')->getInfo([['order_id', '=', $order_id]], 'distribution_complete_coupons');
+
+            if (empty($order_info) || empty($order_info['distribution_complete_coupons'])) {
+                file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - sendDistributionCompleteCoupon 订单没有分销完成优惠券配置' . "\n", FILE_APPEND);
+                return;
+            }
+
+            // 解析优惠券配置 JSON
+            $complete_coupons = json_decode($order_info['distribution_complete_coupons'], true);
+            if (empty($complete_coupons) || !is_array($complete_coupons)) {
+                file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - sendDistributionCompleteCoupon JSON解析失败或为空' . "\n", FILE_APPEND);
+                return;
+            }
+
+            file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - sendDistributionCompleteCoupon 准备发放优惠券: ' . json_encode($complete_coupons, JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND);
+
+            // 检查优惠券插件是否存在
+            if (!class_exists('\addon\coupon\model\Coupon')) {
+                file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - sendDistributionCompleteCoupon 优惠券插件不存在' . "\n", FILE_APPEND);
+                return;
+            }
+
+            $coupon_model = new \addon\coupon\model\Coupon();
+
+            // 遍历发放优惠券
+            foreach ($complete_coupons as $goods_id => $coupon_type_id) {
+                if ($coupon_type_id > 0) {
+                    file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - sendDistributionCompleteCoupon 发放优惠券: goods_id=' . $goods_id . ', coupon_type_id=' . $coupon_type_id . "\n", FILE_APPEND);
+
+                    $coupon_data = [['coupon_type_id' => $coupon_type_id, 'num' => 1]];
+                    $result = $coupon_model->giveCoupon($coupon_data, $site_id, $member_id, \addon\coupon\model\Coupon::GET_TYPE_ACTIVITY_GIVE);
+
+                    file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - sendDistributionCompleteCoupon 发放结果: ' . json_encode($result, JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND);
+                }
+            }
+
+            file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - sendDistributionCompleteCoupon 完成' . "\n", FILE_APPEND);
+
+        } catch (\Exception $e) {
+            file_put_contents('/tmp/order_complete_debug.log', date('Y-m-d H:i:s') . ' - sendDistributionCompleteCoupon 异常: ' . $e->getMessage() . ', file: ' . $e->getFile() . ', line: ' . $e->getLine() . "\n", FILE_APPEND);
+        }
     }
 }

@@ -12,7 +12,7 @@ return [
     'app_namespace'    => '',
     // 是否启用路由
     'with_route'       => true,
-    'de_bug'       => true,
+    'de_bug'       => false,
     //url模式
     'url_model' => 3,
     // 是否启用事件
@@ -35,5 +35,5 @@ return [
     // 错误显示信息,非调试模式有效
     'error_message'    => '页面错误！请稍后再试～',
     // 显示错误信息
-    'show_error_msg'   => true,
+    'show_error_msg'   => false,
 ];

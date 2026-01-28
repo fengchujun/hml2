@@ -355,6 +355,8 @@ class Member extends BaseShop
             if (isset($input[ 'district_id' ])) $data[ 'district_id' ] = $input[ 'district_id' ];
             if (isset($input[ 'address' ])) $data[ 'address' ] = $input[ 'address' ];
             if (isset($input[ 'full_address' ])) $data[ 'full_address' ] = $input[ 'full_address' ];
+            if (isset($input[ 'fx_level' ])) $data[ 'fx_level' ] = intval($input[ 'fx_level' ]);
+            if (isset($input[ 'warehouse_id' ])) $data[ 'warehouse_id' ] = intval($input[ 'warehouse_id' ]);
 
             $member_id = input('member_id', 0);
             $member_model = new MemberModel();

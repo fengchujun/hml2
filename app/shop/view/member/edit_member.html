@@ -80,6 +80,29 @@
 						<i class="layui-icon text-color" style="margin-left: 5px;" onclick="editMemberLevel(this)"> </i>
 					</div>
 					<div class="data-item">
+						<span>分销员等级：</span>
+						<span>
+							{switch name="$member_info.data.fx_level"}
+							{case value="0"}无{/case}
+							{case value="1"}一级{/case}
+							{case value="2"}二级{/case}
+							{case value="3"}三级{/case}
+							{default /}无{/switch}
+						</span>
+						<i class="layui-icon text-color" style="margin-left: 5px;" onclick="editFxLevel(this)">&#xe642;</i>
+					</div>
+					<div class="data-item">
+						<span>所属仓库：</span>
+						<span>
+							{switch name="$member_info.data.warehouse_id"}
+							{case value="0"}无{/case}
+							{case value="1"}深圳{/case}
+							{case value="2"}河源{/case}
+							{default /}无{/switch}
+						</span>
+						<i class="layui-icon text-color" style="margin-left: 5px;" onclick="editWarehouse(this)">&#xe642;</i>
+					</div>
+					<div class="data-item">
 						<span>注册时间：</span>
 						<span>{:time_to_date($member_info.data.reg_time)}</span>
 					</div>

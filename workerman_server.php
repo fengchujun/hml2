@@ -25,8 +25,8 @@ use Workerman\Protocols\Http\Response as WorkermanResponse;
 
 $context = array(
     'ssl' => array(
-        'local_cert' => '/www/wwwroot/test.ayatimes.com/ssl/cert.pem',
-        'local_pk' => '/www/wwwroot/test.ayatimes.com/ssl/key.pem',
+        'local_cert' => '/www/wwwroot/huamulantea.com/ssl/cert.pem',
+        'local_pk' => '/www/wwwroot/huamulantea.com/ssl/key.pem',
         'verify_peer' => false,
         'allow_self_signed' => false,
     )
@@ -34,7 +34,7 @@ $context = array(
 
 $http_worker = new Worker('http://0.0.0.0:7001', $context);
 $http_worker->transport = 'ssl';
-$http_worker->count = 4;
+$http_worker->count = 20;
 $http_worker->name = 'ThinkPHP-HTTPS-Server';
 $http_worker->reusePort = true;
 
@@ -52,10 +52,10 @@ $http_worker->onWorkerStart = function($worker) {
         $_SERVER = [
             'REQUEST_METHOD' => 'GET',
             'REQUEST_URI' => '/',
-            'SERVER_NAME' => 'test.ayatimes.com',
+            'SERVER_NAME' => 'www.huamulantea.com',
             'SERVER_PORT' => '7001',
             'HTTPS' => 'on',
-            'HTTP_HOST' => 'test.ayatimes.com',
+            'HTTP_HOST' => 'www.huamulantea.com',
             'SCRIPT_NAME' => '/index.php',
             'SCRIPT_FILENAME' => __DIR__ . '/index.php',
             'DOCUMENT_ROOT' => __DIR__,
@@ -110,12 +110,12 @@ $http_worker->onMessage = function($connection, WorkermanRequest $workerman_requ
             'PATH_INFO' => $workerman_request->path(),
             'QUERY_STRING' => $workerman_request->queryString(),
             'SERVER_PROTOCOL' => 'HTTP/' . $workerman_request->protocolVersion(),
-            'HTTP_HOST' => 'test.ayatimes.com',
+            'HTTP_HOST' => 'www.huamulantea.com',
             'HTTPS' => 'on',
             'SERVER_PORT' => '7001',
             'REMOTE_ADDR' => $connection->getRemoteIp(),
             'REMOTE_PORT' => $connection->getRemotePort(),
-            'SERVER_NAME' => 'test.ayatimes.com',
+            'SERVER_NAME' => 'www.huamulantea.com',
             'SCRIPT_NAME' => '/index.php',
             'PHP_SELF' => $workerman_request->path(),
             'SCRIPT_FILENAME' => __DIR__ . '/index.php',
@@ -253,7 +253,7 @@ echo "ThinkPHP + Workerman HTTPS Server (小程序兼容版)\n";
 echo "======================================================================\n";
 echo "监听地址：https://0.0.0.0:7001\n";
 echo "Worker 数量：{$http_worker->count}\n";
-echo "授权域名：test.ayatimes.com\n";
+echo "授权域名：www.huamulantea.com\n";
 echo "======================================================================\n";
 echo "功能支持：\n";
 echo "  ✓ HTTPS (SSL/TLS)\n";
