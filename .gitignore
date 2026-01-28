@@ -8,7 +8,7 @@
 *.log
 *.txt
 /h5
-/web
+# /web  # PC Web English version - do not ignore
 /mshop
 /config/database.php
 /cashregister
