@@ -1,8 +1,9 @@
 <?php
 require_once 'api.php';
+require_once 'lang.php';
 
 // 设置页面标题
-$page_title = '企业资讯';
+$page_title = $is_english ? 'Company News' : '企业资讯';
 
 // 获取分页参数
 $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
@@ -15,7 +16,11 @@ $page_count = $newsResult['data']['page_count'] ?? 1;
 $total_count = $newsResult['data']['count'] ?? 0;
 
 // 包含头部
-include 'templates/header.php';
+if ($is_english) {
+    include 'templates/header_en.php';
+} else {
+    include 'templates/header.php';
+}
 ?>
 
 <style>
@@ -211,33 +216,34 @@ include 'templates/header.php';
 
 <div class="news-container">
     <div class="page-header">
-        <h1 class="page-title">企业资讯</h1>
-        <p class="page-subtitle">了解茶祖源·木兰阁最新动态</p>
+        <h1 class="page-title"><?php echo __('news_title'); ?></h1>
+        <p class="page-subtitle"><?php echo __('news_subtitle'); ?></p>
     </div>
 
     <?php if (!empty($newsList)): ?>
     <div class="news-grid">
         <?php foreach ($newsList as $news): ?>
-        <div class="news-card" onclick="location.href='concept-detail.php?id=<?php echo $news['article_id']; ?>'">
+        <?php $articleTitle = $is_english && !empty($news['article_title_en']) ? $news['article_title_en'] : $news['article_title']; ?>
+        <div class="news-card" onclick="location.href='concept-detail.php?id=<?php echo $news['article_id']; ?>&lang=<?php echo $current_lang; ?>'">
             <div class="news-image">
                 <?php if (!empty($news['cover_img'])): ?>
-                <img src="<?php echo e($news['cover_img']); ?>" alt="<?php echo e($news['article_title']); ?>">
+                <img src="<?php echo e($news['cover_img']); ?>" alt="<?php echo e($articleTitle); ?>">
                 <?php else: ?>
-                <img src="https://hmlimg.oss-cn-shenzhen.aliyuncs.com/upload/1/common/images/20251215/20251215054821176579210185871.JPG" alt="<?php echo e($news['article_title']); ?>">
+                <img src="https://hmlimg.oss-cn-shenzhen.aliyuncs.com/upload/1/common/images/20251215/20251215054821176579210185871.JPG" alt="<?php echo e($articleTitle); ?>">
                 <?php endif; ?>
             </div>
             <div class="news-info">
-                <h3 class="news-title"><?php echo e($news['article_title']); ?></h3>
+                <h3 class="news-title"><?php echo e($articleTitle); ?></h3>
                 <?php if (!empty($news['article_abstract'])): ?>
                 <p class="news-abstract"><?php echo e($news['article_abstract']); ?></p>
                 <?php endif; ?>
                 <div class="news-meta">
                     <span class="news-date">
-                        📅 <?php echo date('Y-m-d', $news['create_time']); ?>
+                        <?php echo date('Y-m-d', $news['create_time']); ?>
                     </span>
                     <?php if ($news['is_show_read_num'] == 1): ?>
                     <span class="news-views">
-                        👁️ <?php echo $news['read_num']; ?>
+                        <?php echo $news['read_num']; ?>
                     </span>
                     <?php endif; ?>
                 </div>
@@ -250,33 +256,39 @@ include 'templates/header.php';
     <?php if ($page_count > 1): ?>
     <div class="pagination">
         <?php if ($page > 1): ?>
-            <a href="?page=<?php echo $page - 1; ?>">上一页</a>
+            <a href="?page=<?php echo $page - 1; ?>&lang=<?php echo $current_lang; ?>"><?php echo __('prev_page'); ?></a>
         <?php else: ?>
-            <span class="disabled">上一页</span>
+            <span class="disabled"><?php echo __('prev_page'); ?></span>
         <?php endif; ?>
 
         <?php for ($i = 1; $i <= $page_count; $i++): ?>
             <?php if ($i == $page): ?>
                 <span class="current"><?php echo $i; ?></span>
             <?php else: ?>
-                <a href="?page=<?php echo $i; ?>"><?php echo $i; ?></a>
+                <a href="?page=<?php echo $i; ?>&lang=<?php echo $current_lang; ?>"><?php echo $i; ?></a>
             <?php endif; ?>
         <?php endfor; ?>
 
         <?php if ($page < $page_count): ?>
-            <a href="?page=<?php echo $page + 1; ?>">下一页</a>
+            <a href="?page=<?php echo $page + 1; ?>&lang=<?php echo $current_lang; ?>"><?php echo __('next_page'); ?></a>
         <?php else: ?>
-            <span class="disabled">下一页</span>
+            <span class="disabled"><?php echo __('next_page'); ?></span>
         <?php endif; ?>
     </div>
     <?php endif; ?>
 
     <?php else: ?>
     <div class="empty-state">
-        <h3>暂无资讯</h3>
-        <p>敬请期待更多企业资讯</p>
+        <h3><?php echo __('no_news'); ?></h3>
+        <p><?php echo __('no_news_desc'); ?></p>
     </div>
     <?php endif; ?>
 </div>
 
-<?php include 'templates/footer.php'; ?>
+<?php
+if ($is_english) {
+    include 'templates/footer_en.php';
+} else {
+    include 'templates/footer.php';
+}
+?>

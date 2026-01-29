@@ -1,15 +1,20 @@
 <?php
 require_once 'api.php';
+require_once 'lang.php';
 
 // 设置页面标题
-$page_title = '会客厅';
+$page_title = $is_english ? 'Tea Room' : '会客厅';
 
 // 获取会客厅列表
 $teahouseResult = getTeahouseList(10);
 $teahouses = $teahouseResult['data'] ?? [];
 
 // 包含头部
-include 'templates/header.php';
+if ($is_english) {
+    include 'templates/header_en.php';
+} else {
+    include 'templates/header.php';
+}
 ?>
 
 <style>
@@ -230,7 +235,7 @@ include 'templates/header.php';
 <div class="main-container">
     <!-- 左侧导航 -->
     <aside class="sidebar">
-        <h2 class="sidebar-title">会客厅</h2>
+        <h2 class="sidebar-title"><?php echo __('nav_teahouse'); ?></h2>
         <ul class="sidebar-nav">
             <?php foreach ($teahouses as $index => $teahouse): ?>
             <li>
@@ -265,7 +270,7 @@ include 'templates/header.php';
 
                     <?php if (!empty($teahouse['phone'])): ?>
                     <div class="info-card">
-                        <h3>📞 联系电话</h3>
+                        <h3><?php echo __('contact_phone'); ?></h3>
                         <p><?php echo e($teahouse['phone']); ?></p>
                     </div>
                     <?php endif; ?>
@@ -274,8 +279,8 @@ include 'templates/header.php';
 
                     <?php if ($teahouse['support_reservation'] == 1): ?>
                     <div class="info-card">
-                        <h3>✅ 预约服务</h3>
-                        <p>支持线上预约,扫码进入小程序即可预约</p>
+                        <h3><?php echo __('reservation_service'); ?></h3>
+                        <p><?php echo __('support_reservation'); ?></p>
                     </div>
                     <?php endif; ?>
                 </div>
@@ -283,9 +288,9 @@ include 'templates/header.php';
 
             <?php if ($teahouse['support_reservation'] == 1): ?>
             <div class="reserve-section">
-                <h3 style="font-size: 24px; color: var(--title-color); margin-bottom: 15px;">预约<?php echo e($teahouse['note_title']); ?></h3>
-                <p style="color: #666; font-size: 16px;">扫码进入小程序,选择您方便的时间,我们将为您准备最佳的品茗体验</p>
-                <button class="reserve-btn" onclick="showQRCode('reserve')">立即预约</button>
+                <h3 style="font-size: 24px; color: var(--title-color); margin-bottom: 15px;"><?php echo __('reserve_teahouse'); ?> <?php echo e($teahouse['note_title']); ?></h3>
+                <p style="color: #666; font-size: 16px;"><?php echo __('reserve_desc'); ?></p>
+                <button class="reserve-btn" onclick="showQRCode('reserve')"><?php echo __('book_now'); ?></button>
             </div>
             <?php endif; ?>
         </section>
@@ -294,8 +299,8 @@ include 'templates/header.php';
         <?php if (empty($teahouses)): ?>
         <section class="teahouse-section">
             <div class="teahouse-header">
-                <h1 class="teahouse-title">暂无会客厅信息</h1>
-                <p class="teahouse-subtitle">敬请期待</p>
+                <h1 class="teahouse-title"><?php echo __('no_teahouse'); ?></h1>
+                <p class="teahouse-subtitle"><?php echo __('coming_soon'); ?></p>
             </div>
         </section>
         <?php endif; ?>
@@ -345,4 +350,10 @@ include 'templates/header.php';
     });
 </script>
 
-<?php include 'templates/footer.php'; ?>
+<?php
+if ($is_english) {
+    include 'templates/footer_en.php';
+} else {
+    include 'templates/footer.php';
+}
+?>

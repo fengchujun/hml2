@@ -1,8 +1,9 @@
 <?php
 require_once 'api.php';
+require_once 'lang.php';
 
 // 设置页面标题
-$page_title = '首页';
+$page_title = $is_english ? 'Home' : '首页';
 
 // 获取产品分类
 $categoryResult = getGoodsCategory();
@@ -29,7 +30,11 @@ foreach ($conceptIds as $key => $articleId) {
 }
 
 // 包含头部
-include 'templates/header.php';
+if ($is_english) {
+    include 'templates/header_en.php';
+} else {
+    include 'templates/header.php';
+}
 ?>
 
 <style>
@@ -395,11 +400,11 @@ include 'templates/header.php';
     </video>
     <div class="hero-overlay"></div>
     <div class="hero-content">
-        <h1 class="hero-title">茶祖千万年·濮茶华木兰</h1>
-        <p class="hero-subtitle">传承千年茶文化 品味匠心茶之道</p>
+        <h1 class="hero-title"><?php echo __('hero_title'); ?></h1>
+        <p class="hero-subtitle"><?php echo __('hero_subtitle'); ?></p>
         <div class="cta-buttons">
-            <button class="btn" onclick="showQRCode('order')">立即选购</button>
-            <button class="btn" onclick="showQRCode('reserve')">预约会客厅</button>
+            <button class="btn" onclick="showQRCode('order')"><?php echo __('btn_order'); ?></button>
+            <button class="btn" onclick="showQRCode('reserve')"><?php echo __('btn_reserve'); ?></button>
         </div>
     </div>
 </section>
@@ -407,7 +412,7 @@ include 'templates/header.php';
 <!-- 企业介绍区域 -->
 <section class="content-section" id="concept">
     <div class="content-wrapper">
-        <h2 class="section-title">企业介绍</h2>
+        <h2 class="section-title"><?php echo __('section_intro'); ?></h2>
         <div class="concept-grid">
             <div class="concept-card" onclick="location.href='concept-detail.php?id=<?php echo ARTICLE_ID_ENTERPRISE; ?>'">
                 <div class="concept-title"></div>
@@ -460,7 +465,7 @@ include 'templates/header.php';
 <!-- 会客厅区域 -->
 <section class="content-section" id="teahouse">
     <div class="content-wrapper">
-        <h2 class="section-title">会客厅</h2>
+        <h2 class="section-title"><?php echo __('section_teahouse'); ?></h2>
         <div class="teahouse-grid">
             <?php foreach (array_slice($teahouses, 0, 3) as $teahouse): ?>
             <div class="teahouse-card" onclick="location.href='teahouse-detail.php'">
@@ -477,13 +482,14 @@ include 'templates/header.php';
 <!-- 产品中心 -->
 <section class="content-section" id="products">
     <div class="content-wrapper">
-        <h2 class="section-title">产品中心</h2>
+        <h2 class="section-title"><?php echo __('section_products'); ?></h2>
         <div class="products-grid">
             <?php foreach (array_slice($categories, 0, 6) as $category): ?>
-            <div class="product-card" onclick="location.href='products.php#category<?php echo $category['category_id']; ?>'">
-                <div class="product-title"><?php echo e($category['category_name']); ?></div>
+            <?php $catName = $is_english && !empty($category['category_name_en']) ? $category['category_name_en'] : $category['category_name']; ?>
+            <div class="product-card" onclick="location.href='products.php?lang=<?php echo $current_lang; ?>#category<?php echo $category['category_id']; ?>'">
+                <div class="product-title"><?php echo e($catName); ?></div>
                 <div class="product-image">
-                    <img src="<?php echo $category['image'] ? e($category['image']) : 'https://hmlimg.oss-cn-shenzhen.aliyuncs.com/upload/1/common/images/20251215/20251215054821176579210185871.JPG'; ?>" alt="<?php echo e($category['category_name']); ?>">
+                    <img src="<?php echo $category['image'] ? e($category['image']) : 'https://hmlimg.oss-cn-shenzhen.aliyuncs.com/upload/1/common/images/20251215/20251215054821176579210185871.JPG'; ?>" alt="<?php echo e($catName); ?>">
                 </div>
             </div>
             <?php endforeach; ?>
@@ -510,4 +516,10 @@ include 'templates/header.php';
     });
 </script>
 
-<?php include 'templates/footer.php'; ?>
+<?php
+if ($is_english) {
+    include 'templates/footer_en.php';
+} else {
+    include 'templates/footer.php';
+}
+?>

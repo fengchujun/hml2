@@ -1,5 +1,6 @@
 <?php
 require_once 'api.php';
+require_once 'lang.php';
 
 // 获取article_id参数,默认为企业理念
 $article_id = isset($_GET['id']) ? intval($_GET['id']) : ARTICLE_ID_ENTERPRISE;
@@ -15,20 +16,28 @@ if (empty($article)) {
     $article = $articleResult['data'] ?? [];
 }
 
+// 获取文章标题和内容（多语言）
+$articleTitle = $is_english && !empty($article['article_title_en']) ? $article['article_title_en'] : ($article['article_title'] ?? '');
+$articleContent = $is_english && !empty($article['article_content_en']) ? $article['article_content_en'] : ($article['article_content'] ?? '');
+
 // 设置页面标题
-$page_title = $article['article_title'] ?? '文章详情';
+$page_title = $articleTitle ?: ($is_english ? 'Article' : '文章详情');
 
 // 定义导航菜单(仅当是核心理念相关文章时显示侧边栏)
 $show_sidebar = in_array($article_id, [ARTICLE_ID_ENTERPRISE, ARTICLE_ID_QUALITY, ARTICLE_ID_BRAND, ARTICLE_ID_MANUAL]);
 $nav_items = [
-    ['id' => ARTICLE_ID_ENTERPRISE, 'title' => '企业理念'],
-    ['id' => ARTICLE_ID_QUALITY, 'title' => '品质观念'],
-    ['id' => ARTICLE_ID_BRAND, 'title' => '品牌介绍'],
-    ['id' => ARTICLE_ID_MANUAL, 'title' => '产品手册']
+    ['id' => ARTICLE_ID_ENTERPRISE, 'title' => __('nav_enterprise'), 'title_zh' => '企业理念'],
+    ['id' => ARTICLE_ID_QUALITY, 'title' => __('nav_quality'), 'title_zh' => '品质观念'],
+    ['id' => ARTICLE_ID_BRAND, 'title' => __('brand_intro'), 'title_zh' => '品牌介绍'],
+    ['id' => ARTICLE_ID_MANUAL, 'title' => __('product_manual'), 'title_zh' => '产品手册']
 ];
 
 // 包含头部
-include 'templates/header.php';
+if ($is_english) {
+    include 'templates/header_en.php';
+} else {
+    include 'templates/header.php';
+}
 ?>
 
 <style>
@@ -214,11 +223,11 @@ include 'templates/header.php';
     <?php if ($show_sidebar): ?>
     <!-- 左侧导航 -->
     <aside class="sidebar">
-        <h2 class="sidebar-title">核心理念</h2>
+        <h2 class="sidebar-title"><?php echo __('core_concept'); ?></h2>
         <ul class="sidebar-nav">
             <?php foreach ($nav_items as $item): ?>
             <li>
-                <a href="?id=<?php echo $item['id']; ?>" class="<?php echo $article_id == $item['id'] ? 'active' : ''; ?>">
+                <a href="?id=<?php echo $item['id']; ?>&lang=<?php echo $current_lang; ?>" class="<?php echo $article_id == $item['id'] ? 'active' : ''; ?>">
                     <?php echo e($item['title']); ?>
                 </a>
             </li>
@@ -232,30 +241,36 @@ include 'templates/header.php';
         <?php if (!empty($article)): ?>
         <section class="concept-section">
             <div class="concept-header">
-                <h1 class="concept-title"><?php echo e($article['article_title']); ?></h1>
+                <h1 class="concept-title"><?php echo e($articleTitle); ?></h1>
                 <?php if (!empty($article['article_abstract'])): ?>
                 <p class="concept-subtitle"><?php echo e($article['article_abstract']); ?></p>
                 <?php endif; ?>
             </div>
             <div class="concept-content">
-                <?php echo $article['article_content']; ?>
+                <?php echo $articleContent; ?>
             </div>
             <div class="qr-action">
                 <p style="font-size: 20px; color: var(--title-color); margin-bottom: 20px;">
-                    <em>了解更多详情,请扫码进入小程序</em>
+                    <em><?php echo __('scan_more'); ?></em>
                 </p>
-                <button onclick="showQRCode('product')">查看详情</button>
+                <button onclick="showQRCode('product')"><?php echo __('view_more'); ?></button>
             </div>
         </section>
         <?php else: ?>
         <section class="concept-section">
             <div class="concept-header">
-                <h1 class="concept-title">内容加载中...</h1>
-                <p class="concept-subtitle">请稍候</p>
+                <h1 class="concept-title"><?php echo __('loading'); ?></h1>
+                <p class="concept-subtitle"><?php echo __('please_wait'); ?></p>
             </div>
         </section>
         <?php endif; ?>
     </main>
 </div>
 
-<?php include 'templates/footer.php'; ?>
+<?php
+if ($is_english) {
+    include 'templates/footer_en.php';
+} else {
+    include 'templates/footer.php';
+}
+?>

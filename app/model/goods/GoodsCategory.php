@@ -270,7 +270,7 @@ class GoodsCategory extends BaseModel
      * @param array $condition
      * @param string $field
      */
-    public function getCategoryInfo($condition, $field = 'category_id,category_name,short_name,pid,level,is_recommend,is_show,sort,image,keywords,description,attr_class_id,attr_class_name,category_id_1,category_id_2,category_id_3,category_full_name,commission_rate,image_adv,link_url,icon')
+    public function getCategoryInfo($condition, $field = 'category_id,category_name,category_name_en,short_name,pid,level,is_recommend,is_show,sort,image,keywords,description,attr_class_id,attr_class_name,category_id_1,category_id_2,category_id_3,category_full_name,commission_rate,image_adv,link_url,icon')
     {
         $res = model('goods_category')->getInfo($condition, $field);
         return $this->success($res);
@@ -284,7 +284,7 @@ class GoodsCategory extends BaseModel
      * @param null $limit
      * @return \multitype
      */
-    public function getCategoryList($condition = [], $field = 'category_id,category_name,short_name,pid,level,is_recommend,is_show,sort,image,attr_class_id,attr_class_name,category_id_1,category_id_2,category_id_3,commission_rate,image_adv,icon', $order = '', $limit = null)
+    public function getCategoryList($condition = [], $field = 'category_id,category_name,category_name_en,short_name,pid,level,is_recommend,is_show,sort,image,attr_class_id,attr_class_name,category_id_1,category_id_2,category_id_3,commission_rate,image_adv,icon', $order = '', $limit = null)
     {
         $list = model('goods_category')->getList($condition, $field, $order, '', '', '', $limit);
         return $this->success($list);
@@ -298,7 +298,7 @@ class GoodsCategory extends BaseModel
      * @param null $limit
      * @return \multitype
      */
-    public function getCategoryTree($condition = [], $field = 'category_id,category_name,short_name,pid,level,is_recommend,is_show,sort,image,attr_class_name,category_id_1,category_id_2,category_id_3,commission_rate,icon', $order = 'sort asc,category_id desc', $limit = null)
+    public function getCategoryTree($condition = [], $field = 'category_id,category_name,category_name_en,short_name,pid,level,is_recommend,is_show,sort,image,attr_class_name,category_id_1,category_id_2,category_id_3,commission_rate,icon', $order = 'sort asc,category_id desc', $limit = null)
     {
         $cache_name = $this->cache_model . '_' . __FUNCTION__ . '_' . serialize(func_get_args());
         $cache = Cache::get($cache_name, "");
@@ -358,7 +358,7 @@ class GoodsCategory extends BaseModel
      * @param string $field
      * @return \multitype
      */
-    public function getCategoryPageList($condition = [], $page = 1, $page_size = PAGE_LIST_ROWS, $order = '', $field = 'category_id,category_name,short_name,pid,level,is_recommend,is_show,sort,image,category_id_1,category_id_2,category_id_3,category_full_name,commission_rate,icon')
+    public function getCategoryPageList($condition = [], $page = 1, $page_size = PAGE_LIST_ROWS, $order = '', $field = 'category_id,category_name,category_name_en,short_name,pid,level,is_recommend,is_show,sort,image,category_id_1,category_id_2,category_id_3,category_full_name,commission_rate,icon')
     {
         $list = model('goods_category')->pageList($condition, $field, $order, $page, $page_size);
         return $this->success($list);
@@ -372,7 +372,7 @@ class GoodsCategory extends BaseModel
      * @param null $limit
      * @return \multitype
      */
-    public function getCategoryByParent($condition = [], $field = 'category_id,category_name,short_name,pid,level,is_recommend,is_show,sort,image,attr_class_id,attr_class_name,category_id_1,category_id_2,category_id_3,commission_rate,icon', $order = 'sort asc,category_id desc', $limit = null)
+    public function getCategoryByParent($condition = [], $field = 'category_id,category_name,category_name_en,short_name,pid,level,is_recommend,is_show,sort,image,attr_class_id,attr_class_name,category_id_1,category_id_2,category_id_3,commission_rate,icon', $order = 'sort asc,category_id desc', $limit = null)
     {
         $cache_name = $this->cache_model . '_' . __FUNCTION__ . '_' . serialize(func_get_args());
         $cache = Cache::get($cache_name, "");
