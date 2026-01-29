@@ -1156,7 +1156,7 @@ class Member extends BaseModel
 
         // 如果没有配置AppCode，直接返回默认值
         if (empty($appcode)) {
-            return '86';
+            return '0086';
         }
 
         try {
@@ -1184,9 +1184,8 @@ class Member extends BaseModel
                 $result = json_decode($response, true);
 
                 if ($result && $result['code'] == 200 && !empty($result['data']['areaCode'])) {
-                    // 去掉前面的0：0755 -> 755, 010 -> 10
-                    $area_code = ltrim($result['data']['areaCode'], '0');
-                    return $area_code ?: '86'; // 如果去掉0后为空，返回86
+                    // 保留原始区号（包括前导0）
+                    return $result['data']['areaCode'];
                 }
             }
         } catch (\Exception $e) {
@@ -1194,7 +1193,7 @@ class Member extends BaseModel
         }
 
         // 失败返回默认值
-        return '86';
+        return '0086';
     }
 
     /**
@@ -1209,16 +1208,18 @@ class Member extends BaseModel
         // 1. 获取区号
         $area_code = $this->getAreaCodeByMobile($mobile);
 
-        // 2. 生成序号（带事务和行锁）
+        // 2. 区号固定4位（不足左补0）
+        $area_code_fixed = str_pad($area_code, 4, '0', STR_PAD_LEFT);
+
+        // 3. 生成序号（带事务和行锁）
         $seq_model = new MemberCodeSequence();
         $current_seq = $seq_model->getNextSeq($site_id, $area_code, $member_type);
 
-        // 3. 计算序号位数（总长度固定12位）
-        $prefix_length = strlen($area_code) + 1; // 区号 + 类型（1位）
-        $seq_length = max(12 - $prefix_length, 1); // 至少1位
+        // 4. 序列号固定7位（总长度12位 = 4位区号 + 1位类型 + 7位序列号）
+        $seq_fixed = str_pad($current_seq, 7, '0', STR_PAD_LEFT);
 
-        // 4. 组装编号
-        $member_code = $area_code . $member_type . str_pad($current_seq, $seq_length, '0', STR_PAD_LEFT);
+        // 5. 组装编号：区号(4位) + 类型(1位) + 序列号(7位)
+        $member_code = $area_code_fixed . $member_type . $seq_fixed;
 
         return [
             'member_code' => $member_code,
