@@ -270,7 +270,7 @@ class GoodsCategory extends BaseModel
      * @param array $condition
      * @param string $field
      */
-    public function getCategoryInfo($condition, $field = 'category_id,category_name,category_name_en,short_name,pid,level,is_recommend,is_show,sort,image,keywords,description,attr_class_id,attr_class_name,category_id_1,category_id_2,category_id_3,category_full_name,commission_rate,image_adv,link_url,icon')
+    public function getCategoryInfo($condition, $field = 'category_id,category_name,category_name_en,short_name,pid,level,is_recommend,is_show,sort,image,image_en,keywords,description,attr_class_id,attr_class_name,category_id_1,category_id_2,category_id_3,category_full_name,commission_rate,image_adv,link_url,icon')
     {
         $res = model('goods_category')->getInfo($condition, $field);
         return $this->success($res);

@@ -8,9 +8,10 @@ ALTER TABLE `hml_goods_category`
 ADD COLUMN `category_name_en` VARCHAR(50) DEFAULT '' COMMENT 'Category name (English)' AFTER `category_name`,
 ADD COLUMN `image_en` VARCHAR(255) DEFAULT '' COMMENT 'Category image (English)' AFTER `image`;
 
--- 2. hml_goods: Add goods_name_en, goods_content_en
+-- 2. hml_goods: Add goods_name_en, goods_image_en, goods_content_en
 ALTER TABLE `hml_goods`
 ADD COLUMN `goods_name_en` VARCHAR(255) DEFAULT '' COMMENT 'Product name (English)' AFTER `goods_name`,
+ADD COLUMN `goods_image_en` VARCHAR(2000) DEFAULT '' COMMENT 'Product image (English)' AFTER `goods_image`,
 ADD COLUMN `goods_content_en` TEXT COMMENT 'Product content (English)' AFTER `goods_content`;
 
 -- 3. hml_goods_sku: Add sku_name_en, goods_name_en, goods_content_en
@@ -32,5 +33,7 @@ ADD COLUMN `note_content_en` TEXT COMMENT 'Note content (English)' AFTER `note_c
 ADD COLUMN `cover_img_en` VARCHAR(2000) DEFAULT '' COMMENT 'Cover image (English)' AFTER `cover_img`;
 
 -- =====================================================
--- Note: Run this SQL on your database to add the English fields
+-- IMPORTANT: After running this SQL, you MUST clear ThinkPHP's schema cache:
+-- Delete all files in: runtime/schema/
+-- Otherwise ThinkPHP will not recognize the new fields (fields_cache=true)
 -- =====================================================

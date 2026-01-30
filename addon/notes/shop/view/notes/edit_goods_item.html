@@ -38,6 +38,13 @@
     </div>
 
     <div class="layui-form-item">
+        <label class="layui-form-label short-label">笔记标题(英文)：</label>
+        <div class="layui-input-inline">
+            <input type="text" name="note_title_en" value="{$info.note_title_en}" maxlength="100" autocomplete="off" placeholder="Please enter note title in English" class="layui-input len-long">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
         <label class="layui-form-label short-label">摘要：</label>
         <div class="layui-input-block">
             <textarea name="note_abstract" class="layui-textarea len-long" maxlength="100">{$info.note_abstract}</textarea>
@@ -74,6 +81,22 @@
             </div>
         </div>
         <div class="word-aux">推荐使用 750x420 像素的图片 最多上传1张</div>
+    </div>
+
+    <!-- 英文封面 -->
+    <div class="layui-form-item">
+        <label class="layui-form-label">封面(英文)：</label>
+        <div class="layui-input-block img-upload">
+            <div class="upload-img-block square simple-uploading">
+                <div class="upload-img-box" id="img_en">
+                    <div class="upload-default">
+                        <i class="iconfont iconshangchuan"></i>
+                        <p>点击上传</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="word-aux">English version cover image, 750x420 pixels recommended</div>
     </div>
 
     <div class="layui-form-item">
@@ -165,6 +188,14 @@
     </div>
 
     <div class="layui-form-item">
+        <label class="layui-form-label">会客厅内容(英文)：</label>
+        <div class="layui-input-inline">
+            <script id="editor_en" type="text/plain" class="special-length" style="height:500px;"></script>
+            <input type="hidden" name="note_content_en" id="note_content_en" value="{$info.note_content_en}"/>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
         <label class="layui-form-label">发布时间：</label>
         <div class="layui-input-inline">
             <input type="radio" name="is_show_release_time" value="1" title="显示" {if $info.is_show_release_time == 1} checked {/if}>
@@ -240,9 +271,11 @@
     var form,
             IMAGE_MAX = 9, //最多可以上传多少张图片
             imageCollection = [], //图片集合
+            imageCollectionEn = [], //英文封面图片集合
             repeat_flag = false,
             coverType = '{$info.cover_type}',
             coverImg = '{$info.cover_img}',
+            coverImgEn = '{$info.cover_img_en}',
             goods_ids = '{$info.goods_ids}';
 
     initImg();//初始化图片
@@ -287,11 +320,25 @@
         else $(".shopping-lightspot .add-lightspot").before(html)
     }
 
+    // 初始化英文封面
+    if (coverImgEn) {
+        $("#img_en").html("<img src=" + ns.img(coverImgEn) + " >");
+        imageCollectionEn = [coverImgEn];
+    }
+
     //实例化富文本
     var ue = UE.getEditor('editor');
     if($("#note_content").val()){
         ue.ready(function() {
             ue.setContent($("#note_content").val());
+        });
+    }
+
+    // 英文内容富文本
+    var ue_en = UE.getEditor('editor_en');
+    if($("#note_content_en").val()){
+        ue_en.ready(function() {
+            ue_en.setContent($("#note_content_en").val());
         });
     }
 
@@ -348,6 +395,17 @@
                 imageCollection.splice(1, imageCollection.length);
                 var val = '<img src="' + ns.img(imageCollection[0]) + '" alt="">';
                 $("#img").html(val);
+            }, 1);
+        });
+
+        // 英文封面上传
+        $("body").off("click", "#img_en").on("click", "#img_en", function () {
+            openAlbum(function (data) {
+                imageCollectionEn = [];
+                imageCollectionEn.push(data[0].pic_path);
+                imageCollectionEn.splice(1, imageCollectionEn.length);
+                var val = '<img src="' + ns.img(imageCollectionEn[0]) + '" alt="">';
+                $("#img_en").html(val);
             }, 1);
         });
 
@@ -449,6 +507,7 @@
             return;
         }
         field.cover_img = imageCollection.join();
+        field.cover_img_en = imageCollectionEn.length ? imageCollectionEn.join() : '';
 
         var goodsHighlights = [];
         for (var i = 0; i < $(".lightspot-item").length; i++){
@@ -472,6 +531,7 @@
             return false;
         }
         field.note_content = ue.getContent();
+        field.note_content_en = ue_en.getContent();
 
         if(repeat_flag) return;
         repeat_flag = true;

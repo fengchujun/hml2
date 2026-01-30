@@ -303,6 +303,7 @@ class Goods extends BaseShop
                 'category_id' => $category_id,
                 'category_json' => $category_json,
                 'goods_image' => input('goods_image', ''),// 商品主图路径
+                'goods_image_en' => input('goods_image_en', ''),// 商品主图(英文)
                 'goods_content' => input('goods_content', ''),// 商品详情
                 'goods_content_en' => input('goods_content_en', ''),// 商品详情(英文)
                 'goods_state' => input('goods_state', ''),// 商品状态（1.正常0下架）
@@ -460,6 +461,7 @@ class Goods extends BaseShop
                 'category_id' => $category_id,
                 'category_json' => $category_json,
                 'goods_image' => input('goods_image', ''),// 商品主图路径
+                'goods_image_en' => input('goods_image_en', ''),// 商品主图(英文)
                 'goods_content' => input('goods_content', ''),// 商品详情
                 'goods_content_en' => input('goods_content_en', ''),// 商品详情(英文)
                 'goods_state' => input('goods_state', ''),// 商品状态（1.正常0下架）
