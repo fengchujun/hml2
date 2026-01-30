@@ -89,6 +89,12 @@ $(function () {
 
 	goodsContent = UE.getEditor('editor', {autoHeightEnabled: false});
 
+	// English content editor
+	var goodsContentEn = null;
+	if (document.getElementById('editor_en')) {
+		goodsContentEn = UE.getEditor('editor_en', {autoHeightEnabled: false});
+	}
+
 	//分类选择初始化
 	let category_data_dom = $("#category_data");
 	multiCategorySelect = new MultiCategorySelect({
@@ -961,6 +967,11 @@ $(function () {
 			}
 
 			data.field.goods_content = goods_content;//商品详情
+
+			// English content
+			if (goodsContentEn) {
+				data.field.goods_content_en = goodsContentEn.getContent();
+			}
 
 			//刷新商品参数格式json
 			refreshGoodsAttrData();
@@ -2152,6 +2163,13 @@ function initEditData() {
 	goodsContent.ready(function () {
 		goodsContent.setContent($("input[name='goods_content']").val());
 	});
+
+	// 加载商品详情(英文)
+	if (goodsContentEn) {
+		goodsContentEn.ready(function () {
+			goodsContentEn.setContent($("input[name='goods_content_en']").val());
+		});
+	}
 
 	// 加载商品参数关联
 	var goods_attr_format = $("input[name='goods_attr_format']").val().toString();

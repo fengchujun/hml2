@@ -41,6 +41,7 @@ class Goodscategory extends BaseShop
         $goods_category_model = new GoodsCategoryModel();
         if (request()->isJson()) {
             $category_name = input('category_name', ''); // 分类名称
+            $category_name_en = input('category_name_en', ''); // 分类名称(英文)
             $short_name = input('short_name', ''); // 简称
             $pid = input('pid', 0); //默认添加的商品分类为顶级
             $level = input('level', 1); // 层级
@@ -49,6 +50,7 @@ class Goodscategory extends BaseShop
             $is_show = input('is_show', ''); // 是否显示
 //            $sort = input('sort', ''); // 排序
             $image = input('image', ''); // 分类图片
+            $image_en = input('image_en', ''); // 分类图片(英文)
             $image_adv = input('image_adv', ''); // 分类广告图片
             $keywords = input('keywords', ''); // 分类页面关键字
             $description = input('description', ''); // 分类介绍
@@ -63,6 +65,7 @@ class Goodscategory extends BaseShop
             $data = [
                 'site_id' => $this->site_id,
                 'category_name' => $category_name,
+                'category_name_en' => $category_name_en,
                 'short_name' => $short_name,
                 'pid' => $pid,
                 'level' => $level,
@@ -70,6 +73,7 @@ class Goodscategory extends BaseShop
                 'is_show' => $is_show,
 //                'sort' => $sort,
                 'image' => $image,
+                'image_en' => $image_en,
                 'image_adv' => $image_adv,
                 'keywords' => $keywords,
                 'description' => $description,
@@ -115,6 +119,7 @@ class Goodscategory extends BaseShop
         $goods_category_model = new GoodsCategoryModel();
         if (request()->isJson()) {
             $category_name = input('category_name', '');// 分类名称
+            $category_name_en = input('category_name_en', '');// 分类名称(英文)
             $short_name = input('short_name', '');// 简称
             $pid = input('pid', 0);//默认添加的商品分类为顶级
             $level = input('level', 1);// 层级
@@ -122,6 +127,7 @@ class Goodscategory extends BaseShop
             $is_show = input('is_show', 0);// 是否显示
 //            $sort = input('sort', 0);// 排序
             $image = input('image', '');// 分类图片
+            $image_en = input('image_en', '');// 分类图片(英文)
             $image_adv = input('image_adv', '');// 分类广告图片
             $keywords = input('keywords', '');// 分类页面关键字
             $description = input('description', '');// 分类介绍
@@ -138,6 +144,7 @@ class Goodscategory extends BaseShop
                 'site_id' => $this->site_id,
                 'category_id' => $category_id,
                 'category_name' => $category_name,
+                'category_name_en' => $category_name_en,
                 'short_name' => $short_name,
                 'pid' => $pid,
                 'level' => $level,
@@ -145,6 +152,7 @@ class Goodscategory extends BaseShop
                 'is_show' => $is_show,
 //                'sort' => $sort,
                 'image' => $image,
+                'image_en' => $image_en,
                 'image_adv' => $image_adv,
                 'keywords' => $keywords,
                 'description' => $description,

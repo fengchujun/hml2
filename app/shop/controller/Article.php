@@ -89,10 +89,13 @@ class Article extends BaseShop
             $articles_data = [
                 'site_id' => $this->site_id,
                 'article_title' => input('article_title', ''),
+                'article_title_en' => input('article_title_en', ''),// 文章标题(英文)
                 'article_abstract' => input('article_abstract', ''),
                 'category_id' => input('category_id', ''),
                 'cover_img' => input('cover_img', ''),
+                'cover_img_en' => input('cover_img_en', ''),// 封面图(英文)
                 'article_content' => input('article_content', ''),
+                'article_content_en' => input('article_content_en', ''),// 文章内容(英文)
                 'status' => input('status', ''),
                 'sort' => input('sort', '0'),
                 'is_show_release_time' => input('is_show_release_time', ''),
@@ -123,10 +126,13 @@ class Article extends BaseShop
                 'article_id' => $article_id,
                 'site_id' => $this->site_id,
                 'article_title' => input('article_title', ''),
+                'article_title_en' => input('article_title_en', ''),// 文章标题(英文)
                 'article_abstract' => input('article_abstract', ''),
                 'category_id' => input('category_id', ''),
                 'cover_img' => input('cover_img', ''),
+                'cover_img_en' => input('cover_img_en', ''),// 封面图(英文)
                 'article_content' => input('article_content', ''),
+                'article_content_en' => input('article_content_en', ''),// 文章内容(英文)
                 'status' => input('status', ''),
                 'sort' => input('sort', '0'),
                 'is_show_release_time' => input('is_show_release_time', ''),
