@@ -61,6 +61,16 @@ $(function () {
 			}
 		});
 
+		var en_upload = new Upload({
+			elem: '#imgUploadEn',
+			size:100,
+			auto:false,
+			bindAction:'#imageEnUploadAction',
+			callback: function(res) {
+				uploadComplete('image_en', res.data.pic_path);
+			}
+		});
+
 		var adv_upload = new Upload({
 			elem: '#imgUploadAdv',
 			auto:false,
@@ -104,6 +114,8 @@ $(function () {
 
 			// 删除图片
 			if(!data.field.image) upload.delete();
+
+			if(!data.field.image_en) en_upload.delete();
 
 			if(!data.field.image_adv) adv_upload.delete();
 

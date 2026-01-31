@@ -418,9 +418,8 @@ if ($is_english) {
                 <div class="concept-title"></div>
                 <div class="concept-image">
                     <?php
-                    $enterpriseImg = isset($conceptArticles['enterprise']['cover_img']) && !empty($conceptArticles['enterprise']['cover_img'])
-                        ? $conceptArticles['enterprise']['cover_img']
-                        : 'https://hmlimg.oss-cn-shenzhen.aliyuncs.com/upload/1/common/images/20251215/20251215054821176579210185871.JPG';
+                    $enterpriseImg = !empty($conceptArticles['enterprise']) ? getLocalizedField($conceptArticles['enterprise'], 'cover_img') : '';
+                    if (empty($enterpriseImg)) $enterpriseImg = isset($conceptArticles['enterprise']['cover_img']) && !empty($conceptArticles['enterprise']['cover_img']) ? $conceptArticles['enterprise']['cover_img'] : 'https://hmlimg.oss-cn-shenzhen.aliyuncs.com/upload/1/common/images/20251215/20251215054821176579210185871.JPG';
                     ?>
                     <img src="<?php echo e($enterpriseImg); ?>" alt="企业理念">
                 </div>
@@ -429,9 +428,8 @@ if ($is_english) {
                 <div class="concept-title"></div>
                 <div class="concept-image">
                     <?php
-                    $qualityImg = isset($conceptArticles['quality']['cover_img']) && !empty($conceptArticles['quality']['cover_img'])
-                        ? $conceptArticles['quality']['cover_img']
-                        : 'https://hmlimg.oss-cn-shenzhen.aliyuncs.com/upload/1/common/images/20251215/20251215054821176579210185871.JPG';
+                    $qualityImg = !empty($conceptArticles['quality']) ? getLocalizedField($conceptArticles['quality'], 'cover_img') : '';
+                    if (empty($qualityImg)) $qualityImg = isset($conceptArticles['quality']['cover_img']) && !empty($conceptArticles['quality']['cover_img']) ? $conceptArticles['quality']['cover_img'] : 'https://hmlimg.oss-cn-shenzhen.aliyuncs.com/upload/1/common/images/20251215/20251215054821176579210185871.JPG';
                     ?>
                     <img src="<?php echo e($qualityImg); ?>" alt="品质观念">
                 </div>
@@ -440,9 +438,8 @@ if ($is_english) {
                 <div class="concept-title"></div>
                 <div class="concept-image">
                     <?php
-                    $manualImg = isset($conceptArticles['manual']['cover_img']) && !empty($conceptArticles['manual']['cover_img'])
-                        ? $conceptArticles['manual']['cover_img']
-                        : 'https://hmlimg.oss-cn-shenzhen.aliyuncs.com/upload/1/common/images/20251215/20251215054821176579210185871.JPG';
+                    $manualImg = !empty($conceptArticles['manual']) ? getLocalizedField($conceptArticles['manual'], 'cover_img') : '';
+                    if (empty($manualImg)) $manualImg = isset($conceptArticles['manual']['cover_img']) && !empty($conceptArticles['manual']['cover_img']) ? $conceptArticles['manual']['cover_img'] : 'https://hmlimg.oss-cn-shenzhen.aliyuncs.com/upload/1/common/images/20251215/20251215054821176579210185871.JPG';
                     ?>
                     <img src="<?php echo e($manualImg); ?>" alt="产品手册">
                 </div>
@@ -451,9 +448,8 @@ if ($is_english) {
                 <div class="concept-title"></div>
                 <div class="concept-image">
                     <?php
-                    $brandImg = isset($conceptArticles['brand']['cover_img']) && !empty($conceptArticles['brand']['cover_img'])
-                        ? $conceptArticles['brand']['cover_img']
-                        : 'https://hmlimg.oss-cn-shenzhen.aliyuncs.com/upload/1/common/images/20251215/20251215054821176579210185871.JPG';
+                    $brandImg = !empty($conceptArticles['brand']) ? getLocalizedField($conceptArticles['brand'], 'cover_img') : '';
+                    if (empty($brandImg)) $brandImg = isset($conceptArticles['brand']['cover_img']) && !empty($conceptArticles['brand']['cover_img']) ? $conceptArticles['brand']['cover_img'] : 'https://hmlimg.oss-cn-shenzhen.aliyuncs.com/upload/1/common/images/20251215/20251215054821176579210185871.JPG';
                     ?>
                     <img src="<?php echo e($brandImg); ?>" alt="品牌介绍">
                 </div>
@@ -468,10 +464,12 @@ if ($is_english) {
         <h2 class="section-title"><?php echo __('section_teahouse'); ?></h2>
         <div class="teahouse-grid">
             <?php foreach (array_slice($teahouses, 0, 3) as $teahouse): ?>
-            <div class="teahouse-card" onclick="location.href='teahouse-detail.php'">
-                <div class="teahouse-title"><?php echo e($teahouse['note_title']); ?></div>
+            <?php $teahouseTitle = getLocalizedField($teahouse, 'note_title'); ?>
+            <?php $teahouseCover = getLocalizedField($teahouse, 'cover_img') ?: ($teahouse['cover_img'] ?? ''); ?>
+            <div class="teahouse-card" onclick="location.href='teahouse-detail.php?lang=<?php echo $current_lang; ?>'">
+                <div class="teahouse-title"><?php echo e($teahouseTitle); ?></div>
                 <div class="teahouse-image">
-                    <img src="<?php echo e($teahouse['cover_img']); ?>" alt="<?php echo e($teahouse['note_title']); ?>">
+                    <img src="<?php echo e($teahouseCover); ?>" alt="<?php echo e($teahouseTitle); ?>">
                 </div>
             </div>
             <?php endforeach; ?>
@@ -489,7 +487,8 @@ if ($is_english) {
             <div class="product-card" onclick="location.href='products.php?lang=<?php echo $current_lang; ?>#category<?php echo $category['category_id']; ?>'">
                 <div class="product-title"><?php echo e($catName); ?></div>
                 <div class="product-image">
-                    <img src="<?php echo $category['image'] ? e($category['image']) : 'https://hmlimg.oss-cn-shenzhen.aliyuncs.com/upload/1/common/images/20251215/20251215054821176579210185871.JPG'; ?>" alt="<?php echo e($catName); ?>">
+                    <?php $catImage = getLocalizedField($category, 'image') ?: ($category['image'] ?? ''); ?>
+                    <img src="<?php echo $catImage ? e($catImage) : 'https://hmlimg.oss-cn-shenzhen.aliyuncs.com/upload/1/common/images/20251215/20251215054821176579210185871.JPG'; ?>" alt="<?php echo e($catName); ?>">
                 </div>
             </div>
             <?php endforeach; ?>

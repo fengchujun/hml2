@@ -238,9 +238,10 @@ if ($is_english) {
         <h2 class="sidebar-title"><?php echo __('nav_teahouse'); ?></h2>
         <ul class="sidebar-nav">
             <?php foreach ($teahouses as $index => $teahouse): ?>
+            <?php $sideTitle = getLocalizedField($teahouse, 'note_title'); ?>
             <li>
                 <a href="#teahouse<?php echo $index + 1; ?>" class="<?php echo $index == 0 ? 'active' : ''; ?>">
-                    <?php echo e($teahouse['note_title']); ?>
+                    <?php echo e($sideTitle); ?>
                 </a>
             </li>
             <?php endforeach; ?>
@@ -250,20 +251,25 @@ if ($is_english) {
     <!-- 内容区域 -->
     <main class="content-area">
         <?php foreach ($teahouses as $index => $teahouse): ?>
+        <?php
+        $noteTitle = getLocalizedField($teahouse, 'note_title');
+        $noteCover = getLocalizedField($teahouse, 'cover_img') ?: ($teahouse['cover_img'] ?? '');
+        $noteContent = getLocalizedField($teahouse, 'note_content') ?: ($teahouse['note_content'] ?? '');
+        ?>
         <section id="teahouse<?php echo $index + 1; ?>" class="teahouse-section">
             <div class="teahouse-header">
-                <h1 class="teahouse-title"><?php echo e($teahouse['note_title']); ?></h1>
+                <h1 class="teahouse-title"><?php echo e($noteTitle); ?></h1>
                 <?php if (!empty($teahouse['note_abstract'])): ?>
                 <p class="teahouse-subtitle"><?php echo e($teahouse['note_abstract']); ?></p>
                 <?php endif; ?>
             </div>
 
             <div class="teahouse-image-section">
-                <img src="<?php echo e($teahouse['cover_img']); ?>" alt="<?php echo e($teahouse['note_title']); ?>">
+                <img src="<?php echo e($noteCover); ?>" alt="<?php echo e($noteTitle); ?>">
             </div>
 
             <div class="teahouse-content">
-                <?php echo $teahouse['note_content']; ?>
+                <?php echo $noteContent; ?>
 
                 <div class="info-grid">
 
@@ -288,7 +294,7 @@ if ($is_english) {
 
             <?php if ($teahouse['support_reservation'] == 1): ?>
             <div class="reserve-section">
-                <h3 style="font-size: 24px; color: var(--title-color); margin-bottom: 15px;"><?php echo __('reserve_teahouse'); ?> <?php echo e($teahouse['note_title']); ?></h3>
+                <h3 style="font-size: 24px; color: var(--title-color); margin-bottom: 15px;"><?php echo __('reserve_teahouse'); ?> <?php echo e($noteTitle); ?></h3>
                 <p style="color: #666; font-size: 16px;"><?php echo __('reserve_desc'); ?></p>
                 <button class="reserve-btn" onclick="showQRCode('reserve')"><?php echo __('book_now'); ?></button>
             </div>

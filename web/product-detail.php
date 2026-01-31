@@ -246,9 +246,9 @@ if ($is_english) {
         <div class="product-images">
             <div class="main-image">
                 <?php
-                $main_image = !empty($product['sku_image']) ? $product['sku_image'] : 'https://hmlimg.oss-cn-shenzhen.aliyuncs.com/upload/1/common/images/20251215/20251215054821176579210185871.JPG';
+                $main_image = getLocalizedField($product, 'goods_image') ?: (!empty($product['sku_image']) ? $product['sku_image'] : 'https://hmlimg.oss-cn-shenzhen.aliyuncs.com/upload/1/common/images/20251215/20251215054821176579210185871.JPG');
                 ?>
-                <img src="<?php echo e($main_image); ?>" alt="<?php echo e($product['goods_name']); ?>">
+                <img src="<?php echo e($main_image); ?>" alt="<?php echo e($productName); ?>">
             </div>
         </div>
 

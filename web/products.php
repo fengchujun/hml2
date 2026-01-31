@@ -299,7 +299,7 @@ if ($is_english) {
                 <div class="product-card" onclick="location.href='product-detail.php?id=<?php echo $product['goods_id']; ?>&lang=<?php echo $current_lang; ?>'">
                     <div class="product-image">
                         <?php
-                        $image_url = !empty($product['goods_image']) ? $product['goods_image'] : 'https://hmlimg.oss-cn-shenzhen.aliyuncs.com/upload/1/common/images/20251215/20251215054821176579210185871.JPG';
+                        $image_url = getLocalizedField($product, 'goods_image') ?: (!empty($product['goods_image']) ? $product['goods_image'] : 'https://hmlimg.oss-cn-shenzhen.aliyuncs.com/upload/1/common/images/20251215/20251215054821176579210185871.JPG');
                         ?>
                         <img src="<?php echo e($image_url); ?>" alt="<?php echo e($productName); ?>">
                     </div>

@@ -226,8 +226,9 @@ if ($is_english) {
         <?php $articleTitle = $is_english && !empty($news['article_title_en']) ? $news['article_title_en'] : $news['article_title']; ?>
         <div class="news-card" onclick="location.href='concept-detail.php?id=<?php echo $news['article_id']; ?>&lang=<?php echo $current_lang; ?>'">
             <div class="news-image">
-                <?php if (!empty($news['cover_img'])): ?>
-                <img src="<?php echo e($news['cover_img']); ?>" alt="<?php echo e($articleTitle); ?>">
+                <?php $newsCover = getLocalizedField($news, 'cover_img') ?: ($news['cover_img'] ?? ''); ?>
+                <?php if (!empty($newsCover)): ?>
+                <img src="<?php echo e($newsCover); ?>" alt="<?php echo e($articleTitle); ?>">
                 <?php else: ?>
                 <img src="https://hmlimg.oss-cn-shenzhen.aliyuncs.com/upload/1/common/images/20251215/20251215054821176579210185871.JPG" alt="<?php echo e($articleTitle); ?>">
                 <?php endif; ?>
