@@ -5,6 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo isset($page_title) ? e($page_title) . ' - ' : ''; ?><?php echo SITE_NAME; ?></title>
     <?php include __DIR__ . '/styles.php'; ?>
+    <style>
+        .lang-switch {
+            margin-left: 20px;
+            padding: 6px 12px;
+            background: transparent;
+            border: 1px solid var(--nav-text);
+            color: var(--nav-text);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .lang-switch:hover {
+            background: var(--nav-text);
+            color: var(--nav-bg);
+        }
+    </style>
 </head>
 <body>
     <!-- 导航栏 -->
@@ -20,6 +38,7 @@
                 <li><a href="products.php">产品中心</a></li>
                 <li><a href="news.php">企业资讯</a></li>
                 <li><a href="concept-detail.php?id=<?php echo ARTICLE_ID_CONTACT; ?>">联系我们</a></li>
+                <li><a href="<?php echo getLangSwitchUrl('en'); ?>" class="lang-switch">EN</a></li>
             </ul>
         </div>
     </nav>

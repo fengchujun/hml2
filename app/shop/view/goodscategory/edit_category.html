@@ -48,6 +48,16 @@
 			<p>分类名称最长不超过30个字符</p>
 		</div>
 	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">分类名称(英文)：</label>
+		<div class="layui-input-block">
+			<input name="category_name_en" type="text" value="{$goods_category_info['category_name_en']}" placeholder="Please enter category name in English" maxlength="50" class="layui-input len-long" autocomplete="off">
+		</div>
+		<div class="word-aux">
+			<p>Category name in English, max 50 characters</p>
+		</div>
+	</div>
 	
 	<!-- <div class="layui-form-item">
 		<label class="layui-form-label">简称：</label>
@@ -132,6 +142,40 @@
 			<p>建议图片尺寸：不能大于100k。图片格式：jpg、png、jpeg。</p>
 		</div>
 		<a id="imageUploadAction"></a>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">分类图片(英文)：</label>
+		<div class="layui-input-block">
+			<div class="upload-img-block">
+				<div class="upload-img-box {notempty name="$goods_category_info['image_en']"}hover{/notempty}">
+					<div class="upload-default" id="imgUploadEn">
+						{notempty name="$goods_category_info['image_en']"}
+						<div id="preview_imgUploadEn" class="preview_img">
+							<img layer-src src="{:img($goods_category_info['image_en'])}" class="img_prev"/>
+						</div>
+						{else/}
+						<div class="upload">
+							<i class="iconfont iconshangchuan"></i>
+							<p>点击上传</p>
+						</div>
+						{/notempty}
+					</div>
+					<div class="operation">
+						<div>
+							<i title="图片预览" class="iconfont iconreview js-preview" style="margin-right: 20px;"></i>
+							<i title="删除图片" class="layui-icon layui-icon-delete js-delete"></i>
+						</div>
+						<div class="replace_img js-replace">点击替换</div>
+					</div>
+					<input type="hidden" name="image_en" value="{$goods_category_info['image_en']}">
+				</div>
+			</div>
+		</div>
+		<div class="word-aux">
+			<p>Category image for English version</p>
+		</div>
+		<a id="imageEnUploadAction"></a>
 	</div>
 
     <div class="layui-form-item">

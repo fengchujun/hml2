@@ -1054,7 +1054,7 @@ class Goods extends GoodsCommon
      * @param null $join
      * @return array
      */
-    public function getGoodsSkuInfo($condition, $field = "sku_id,sku_name,sku_spec_format,price,market_price,discount_price,promotion_type,start_time,end_time,stock,click_num,sale_num,collect_num,sku_image,sku_images,goods_id,site_id,goods_content,goods_state,is_virtual,is_free_shipping,goods_spec_format,goods_attr_format,introduction,unit,video_url,sku_no,goods_name,goods_class,goods_class_name,cost_price", $alias = 'a', $join = null)
+    public function getGoodsSkuInfo($condition, $field = "sku_id,sku_name,sku_name_en,sku_spec_format,price,market_price,discount_price,promotion_type,start_time,end_time,stock,click_num,sale_num,collect_num,sku_image,sku_images,goods_id,site_id,goods_content,goods_content_en,goods_state,is_virtual,is_free_shipping,goods_spec_format,goods_attr_format,introduction,unit,video_url,sku_no,goods_name,goods_name_en,goods_class,goods_class_name,cost_price", $alias = 'a', $join = null)
     {
         $info = model('goods_sku')->getInfo($condition, $field, $alias, $join);
         if (!empty($info)) {
@@ -1086,9 +1086,9 @@ class Goods extends GoodsCommon
         $condition = [['gs.sku_id', '=', $sku_id], ['gs.site_id', '=', $site_id], ['gs.is_delete', '=', 0]];
 
         if (empty($field)) {
-            $field = 'gs.goods_id,gs.sku_id,gs.qr_id,gs.goods_name,gs.sku_name,gs.sku_spec_format,gs.price,gs.market_price,gs.discount_price,gs.promotion_type,gs.start_time
+            $field = 'gs.goods_id,gs.sku_id,gs.qr_id,gs.goods_name,gs.goods_name_en,gs.sku_name,gs.sku_name_en,gs.sku_spec_format,gs.price,gs.market_price,gs.discount_price,gs.promotion_type,gs.start_time
             ,gs.end_time,gs.stock,gs.click_num,(g.sale_num + g.virtual_sale) as sale_num,gs.collect_num,gs.sku_image,gs.sku_images
-            ,gs.goods_content,gs.goods_state,gs.is_free_shipping,gs.goods_spec_format,gs.goods_attr_format,gs.introduction,gs.unit,gs.video_url
+            ,gs.goods_content,gs.goods_content_en,gs.goods_state,gs.is_free_shipping,gs.goods_spec_format,gs.goods_attr_format,gs.introduction,gs.unit,gs.video_url
             ,gs.is_virtual,gs.goods_service_ids,gs.max_buy,gs.min_buy,gs.is_limit,gs.limit_type,gs.support_trade_type,g.goods_image,g.keywords,g.stock_show,g.sale_show,g.market_price_show,g.barrage_show,g.evaluate,g.goods_class';
         }
         $join = [
@@ -1164,7 +1164,7 @@ class Goods extends GoodsCommon
      * @param string $order
      * @param string $limit
      */
-    public function getGoodsList($condition = [], $field = 'goods_id,goods_class,goods_class_name,goods_attr_name,goods_name,site_id,sort,goods_image,goods_content,goods_state,price,market_price,cost_price,goods_stock,goods_stock_alarm,is_virtual,is_free_shipping,shipping_template,goods_spec_format,goods_attr_format,create_time', $order = 'create_time desc', $limit = null, $alias = '', $join = [])
+    public function getGoodsList($condition = [], $field = 'goods_id,goods_class,goods_class_name,goods_attr_name,goods_name,goods_name_en,site_id,sort,goods_image,goods_content,goods_content_en,goods_state,price,market_price,cost_price,goods_stock,goods_stock_alarm,is_virtual,is_free_shipping,shipping_template,goods_spec_format,goods_attr_format,create_time', $order = 'create_time desc', $limit = null, $alias = '', $join = [])
     {
         $list = model('goods')->getList($condition, $field, $order, $alias, $join, '', $limit);
         if (!empty($list)) {
@@ -1194,7 +1194,7 @@ class Goods extends GoodsCommon
      * @param string $order
      * @param string $field
      */
-    public function getGoodsPageList($condition = [], $page = 1, $page_size = PAGE_LIST_ROWS, $order = 'a.create_time desc', $field = 'a.goods_id,a.goods_name,a.site_id,a.site_name,a.goods_image,a.goods_state,a.price,a.goods_stock,a.goods_stock_alarm,a.create_time,a.sale_num,a.is_virtual,a.goods_class,a.goods_class_name,a.is_fenxiao,a.fenxiao_type,a.promotion_addon,a.sku_id,a.is_consume_discount,a.discount_config,a.discount_method,a.sort,a.label_id,a.is_delete', $alias = 'a', $join = [], $group = null)
+    public function getGoodsPageList($condition = [], $page = 1, $page_size = PAGE_LIST_ROWS, $order = 'a.create_time desc', $field = 'a.goods_id,a.goods_name,a.goods_name_en,a.site_id,a.site_name,a.goods_image,a.goods_state,a.price,a.goods_stock,a.goods_stock_alarm,a.create_time,a.sale_num,a.is_virtual,a.goods_class,a.goods_class_name,a.is_fenxiao,a.fenxiao_type,a.promotion_addon,a.sku_id,a.is_consume_discount,a.discount_config,a.discount_method,a.sort,a.label_id,a.is_delete', $alias = 'a', $join = [], $group = null)
     {
         $res = model('goods')->pageList($condition, $field, $order, $page, $page_size, $alias, $join, $group);
         foreach ($res['list'] as $k => $v) {
@@ -1311,7 +1311,7 @@ class Goods extends GoodsCommon
      * @param null $limit
      * @return array
      */
-    public function getGoodsSkuList($condition = [], $field = 'sku_id,sku_name,price,stock,sale_num,sku_image,goods_id,goods_name,site_id,spec_name', $order = 'price asc', $limit = null, $alias = '', $join = [])
+    public function getGoodsSkuList($condition = [], $field = 'sku_id,sku_name,sku_name_en,price,stock,sale_num,sku_image,goods_id,goods_name,goods_name_en,site_id,spec_name', $order = 'price asc', $limit = null, $alias = '', $join = [])
     {
         $list = model('goods_sku')->getList($condition, $field, $order, $alias, $join, '', $limit);
         //获取属性映射数据

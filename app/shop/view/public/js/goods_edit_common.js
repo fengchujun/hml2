@@ -962,6 +962,11 @@ $(function () {
 
 			data.field.goods_content = goods_content;//商品详情
 
+			// 商品详情(英文) - get from English editor if exists
+			if (window.goodsContentEn) {
+				try { data.field.goods_content_en = window.goodsContentEn.getContent(); } catch(e) {}
+			}
+
 			//刷新商品参数格式json
 			refreshGoodsAttrData();
 

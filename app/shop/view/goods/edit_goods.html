@@ -30,6 +30,13 @@
 						</div>
 
 						<div class="layui-form-item">
+							<label class="layui-form-label">商品名称(英文)：</label>
+							<div class="layui-input-inline">
+								<input name="goods_name_en" type="text" value="{$goods_info['goods_name_en']}" placeholder="Please enter product name in English" maxlength="120" autocomplete="off" class="layui-input len-long">
+							</div>
+						</div>
+
+						<div class="layui-form-item">
 							<label class="layui-form-label">促销语：</label>
 							<div class="layui-input-inline">
 								<textarea class="layui-textarea len-long" name="introduction" maxlength="100" lay-verify="introduction" placeholder="请输入促销语，不能超过100个字符">{$goods_info['introduction']}</textarea>
@@ -83,6 +90,25 @@
 									<li>5、视频文件大小不能超过500MB</li>
 								</ul>
 							</div>
+						</div>
+
+						<div class="layui-form-item">
+							<label class="layui-form-label">商品主图(英文)：</label>
+							<div class="layui-input-block img-upload">
+								<div class="upload-img-block square simple-uploading">
+									<div class="upload-img-box" id="goods_image_en_box">
+										{if !empty($goods_info['goods_image_en'])}
+										<img src="{:img($goods_info['goods_image_en'])}" alt="">
+										{else /}
+										<div class="upload-default">
+											<i class="iconfont iconshangchuan"></i>
+											<p>点击上传</p>
+										</div>
+										{/if}
+									</div>
+								</div>
+							</div>
+							<div class="word-aux">English version product image, 800x800 pixels recommended</div>
 						</div>
 
 						<div class="layui-form-item">
@@ -534,10 +560,17 @@
 			<!-- 商品详情 -->
 			<div class="layui-tab-item">
 				<div class="layui-form-item">
-					<label class="layui-form-label sm"></label>
+					<label class="layui-form-label sm">商品详情(中文)</label>
 					<div class="layui-input-inline special-length">
 						<input type="hidden" name="goods_content" value="{$goods_info['goods_content']}" />
 						<script id="editor" type="text/plain" style="width:100%;height:500px;"></script>
+					</div>
+				</div>
+				<div class="layui-form-item" style="margin-top:20px;">
+					<label class="layui-form-label sm">商品详情(英文)</label>
+					<div class="layui-input-inline special-length">
+						<input type="hidden" name="goods_content_en" value="{$goods_info['goods_content_en']}" />
+						<script id="editor_en" type="text/plain" style="width:100%;height:500px;"></script>
 					</div>
 				</div>
 				<script type="text/javascript" charset="utf-8" src="__STATIC__/ext/ueditor/ueditor.config.js"></script>
@@ -791,6 +824,7 @@
 	<input type="hidden" name="goods_id" value="{$goods_info['goods_id']}" />
 	<input type="hidden" name="goods_spec_format" value="{$goods_info['goods_spec_format']}" />
 	<input type="hidden" name="goods_image" value="{$goods_info['goods_image']}" />
+	<input type="hidden" name="goods_image_en" value="{$goods_info['goods_image_en']}" />
 	<input type="hidden" name="goods_attr_format" value="{$goods_info['goods_attr_format']}" />
 	<input type="hidden" name="has_stock_records" value='{$has_stock_records ?? 0}' />
 
@@ -1106,3 +1140,26 @@
 <script src="SHOP_JS/category_select.js?time=20240821"></script>
 <script src="SHOP_JS/goods_edit_common.js?time=20250527"></script>
 <script src="SHOP_JS/goods_edit.js?time=2024121711"></script>
+<script>
+// 商品英文字段处理
+(function() {
+    // 英文主图上传
+    $("body").off("click", "#goods_image_en_box").on("click", "#goods_image_en_box", function () {
+        openAlbum(function (data) {
+            $("input[name='goods_image_en']").val(data[0].pic_path);
+            var val = '<img src="' + ns.img(data[0].pic_path) + '" alt="">';
+            $("#goods_image_en_box").html(val);
+        }, 1);
+    });
+
+    // 英文详情富文本编辑器
+    var editorEnEl = document.getElementById('editor_en');
+    if (editorEnEl) {
+        window.goodsContentEn = UE.getEditor('editor_en', {autoHeightEnabled: false});
+        window.goodsContentEn.ready(function() {
+            var val = $("input[name='goods_content_en']").val();
+            if (val) window.goodsContentEn.setContent(val);
+        });
+    }
+})();
+</script>

@@ -1,8 +1,9 @@
 <?php
 require_once 'api.php';
+require_once 'lang.php';
 
 // 设置页面标题
-$page_title = '首页';
+$page_title = $is_english ? 'Home' : '首页';
 
 // 获取产品分类
 $categoryResult = getGoodsCategory();
@@ -29,7 +30,11 @@ foreach ($conceptIds as $key => $articleId) {
 }
 
 // 包含头部
-include 'templates/header.php';
+if ($is_english) {
+    include 'templates/header_en.php';
+} else {
+    include 'templates/header.php';
+}
 ?>
 
 <style>
@@ -395,11 +400,11 @@ include 'templates/header.php';
     </video>
     <div class="hero-overlay"></div>
     <div class="hero-content">
-        <h1 class="hero-title">茶祖千万年·濮茶华木兰</h1>
-        <p class="hero-subtitle">传承千年茶文化 品味匠心茶之道</p>
+        <h1 class="hero-title"><?php echo __('hero_title'); ?></h1>
+        <p class="hero-subtitle"><?php echo __('hero_subtitle'); ?></p>
         <div class="cta-buttons">
-            <button class="btn" onclick="showQRCode('order')">立即选购</button>
-            <button class="btn" onclick="showQRCode('reserve')">预约会客厅</button>
+            <button class="btn" onclick="showQRCode('order')"><?php echo __('btn_order'); ?></button>
+            <button class="btn" onclick="showQRCode('reserve')"><?php echo __('btn_reserve'); ?></button>
         </div>
     </div>
 </section>
@@ -407,15 +412,14 @@ include 'templates/header.php';
 <!-- 企业介绍区域 -->
 <section class="content-section" id="concept">
     <div class="content-wrapper">
-        <h2 class="section-title">企业介绍</h2>
+        <h2 class="section-title"><?php echo __('section_intro'); ?></h2>
         <div class="concept-grid">
             <div class="concept-card" onclick="location.href='concept-detail.php?id=<?php echo ARTICLE_ID_ENTERPRISE; ?>'">
                 <div class="concept-title"></div>
                 <div class="concept-image">
                     <?php
-                    $enterpriseImg = isset($conceptArticles['enterprise']['cover_img']) && !empty($conceptArticles['enterprise']['cover_img'])
-                        ? $conceptArticles['enterprise']['cover_img']
-                        : 'https://hmlimg.oss-cn-shenzhen.aliyuncs.com/upload/1/common/images/20251215/20251215054821176579210185871.JPG';
+                    $enterpriseImg = !empty($conceptArticles['enterprise']) ? getLocalizedField($conceptArticles['enterprise'], 'cover_img') : '';
+                    if (empty($enterpriseImg)) $enterpriseImg = isset($conceptArticles['enterprise']['cover_img']) && !empty($conceptArticles['enterprise']['cover_img']) ? $conceptArticles['enterprise']['cover_img'] : 'https://hmlimg.oss-cn-shenzhen.aliyuncs.com/upload/1/common/images/20251215/20251215054821176579210185871.JPG';
                     ?>
                     <img src="<?php echo e($enterpriseImg); ?>" alt="企业理念">
                 </div>
@@ -424,9 +428,8 @@ include 'templates/header.php';
                 <div class="concept-title"></div>
                 <div class="concept-image">
                     <?php
-                    $qualityImg = isset($conceptArticles['quality']['cover_img']) && !empty($conceptArticles['quality']['cover_img'])
-                        ? $conceptArticles['quality']['cover_img']
-                        : 'https://hmlimg.oss-cn-shenzhen.aliyuncs.com/upload/1/common/images/20251215/20251215054821176579210185871.JPG';
+                    $qualityImg = !empty($conceptArticles['quality']) ? getLocalizedField($conceptArticles['quality'], 'cover_img') : '';
+                    if (empty($qualityImg)) $qualityImg = isset($conceptArticles['quality']['cover_img']) && !empty($conceptArticles['quality']['cover_img']) ? $conceptArticles['quality']['cover_img'] : 'https://hmlimg.oss-cn-shenzhen.aliyuncs.com/upload/1/common/images/20251215/20251215054821176579210185871.JPG';
                     ?>
                     <img src="<?php echo e($qualityImg); ?>" alt="品质观念">
                 </div>
@@ -435,9 +438,8 @@ include 'templates/header.php';
                 <div class="concept-title"></div>
                 <div class="concept-image">
                     <?php
-                    $manualImg = isset($conceptArticles['manual']['cover_img']) && !empty($conceptArticles['manual']['cover_img'])
-                        ? $conceptArticles['manual']['cover_img']
-                        : 'https://hmlimg.oss-cn-shenzhen.aliyuncs.com/upload/1/common/images/20251215/20251215054821176579210185871.JPG';
+                    $manualImg = !empty($conceptArticles['manual']) ? getLocalizedField($conceptArticles['manual'], 'cover_img') : '';
+                    if (empty($manualImg)) $manualImg = isset($conceptArticles['manual']['cover_img']) && !empty($conceptArticles['manual']['cover_img']) ? $conceptArticles['manual']['cover_img'] : 'https://hmlimg.oss-cn-shenzhen.aliyuncs.com/upload/1/common/images/20251215/20251215054821176579210185871.JPG';
                     ?>
                     <img src="<?php echo e($manualImg); ?>" alt="产品手册">
                 </div>
@@ -446,9 +448,8 @@ include 'templates/header.php';
                 <div class="concept-title"></div>
                 <div class="concept-image">
                     <?php
-                    $brandImg = isset($conceptArticles['brand']['cover_img']) && !empty($conceptArticles['brand']['cover_img'])
-                        ? $conceptArticles['brand']['cover_img']
-                        : 'https://hmlimg.oss-cn-shenzhen.aliyuncs.com/upload/1/common/images/20251215/20251215054821176579210185871.JPG';
+                    $brandImg = !empty($conceptArticles['brand']) ? getLocalizedField($conceptArticles['brand'], 'cover_img') : '';
+                    if (empty($brandImg)) $brandImg = isset($conceptArticles['brand']['cover_img']) && !empty($conceptArticles['brand']['cover_img']) ? $conceptArticles['brand']['cover_img'] : 'https://hmlimg.oss-cn-shenzhen.aliyuncs.com/upload/1/common/images/20251215/20251215054821176579210185871.JPG';
                     ?>
                     <img src="<?php echo e($brandImg); ?>" alt="品牌介绍">
                 </div>
@@ -460,13 +461,15 @@ include 'templates/header.php';
 <!-- 会客厅区域 -->
 <section class="content-section" id="teahouse">
     <div class="content-wrapper">
-        <h2 class="section-title">会客厅</h2>
+        <h2 class="section-title"><?php echo __('section_teahouse'); ?></h2>
         <div class="teahouse-grid">
             <?php foreach (array_slice($teahouses, 0, 3) as $teahouse): ?>
-            <div class="teahouse-card" onclick="location.href='teahouse-detail.php'">
-                <div class="teahouse-title"><?php echo e($teahouse['note_title']); ?></div>
+            <?php $teahouseTitle = getLocalizedField($teahouse, 'note_title'); ?>
+            <?php $teahouseCover = getLocalizedField($teahouse, 'cover_img') ?: ($teahouse['cover_img'] ?? ''); ?>
+            <div class="teahouse-card" onclick="location.href='teahouse-detail.php?lang=<?php echo $current_lang; ?>'">
+                <div class="teahouse-title"><?php echo e($teahouseTitle); ?></div>
                 <div class="teahouse-image">
-                    <img src="<?php echo e($teahouse['cover_img']); ?>" alt="<?php echo e($teahouse['note_title']); ?>">
+                    <img src="<?php echo e($teahouseCover); ?>" alt="<?php echo e($teahouseTitle); ?>">
                 </div>
             </div>
             <?php endforeach; ?>
@@ -477,13 +480,15 @@ include 'templates/header.php';
 <!-- 产品中心 -->
 <section class="content-section" id="products">
     <div class="content-wrapper">
-        <h2 class="section-title">产品中心</h2>
+        <h2 class="section-title"><?php echo __('section_products'); ?></h2>
         <div class="products-grid">
             <?php foreach (array_slice($categories, 0, 6) as $category): ?>
-            <div class="product-card" onclick="location.href='products.php#category<?php echo $category['category_id']; ?>'">
-                <div class="product-title"><?php echo e($category['category_name']); ?></div>
+            <?php $catName = $is_english && !empty($category['category_name_en']) ? $category['category_name_en'] : $category['category_name']; ?>
+            <div class="product-card" onclick="location.href='products.php?lang=<?php echo $current_lang; ?>#category<?php echo $category['category_id']; ?>'">
+                <div class="product-title"><?php echo e($catName); ?></div>
                 <div class="product-image">
-                    <img src="<?php echo $category['image'] ? e($category['image']) : 'https://hmlimg.oss-cn-shenzhen.aliyuncs.com/upload/1/common/images/20251215/20251215054821176579210185871.JPG'; ?>" alt="<?php echo e($category['category_name']); ?>">
+                    <?php $catImage = getLocalizedField($category, 'image') ?: ($category['image'] ?? ''); ?>
+                    <img src="<?php echo $catImage ? e($catImage) : 'https://hmlimg.oss-cn-shenzhen.aliyuncs.com/upload/1/common/images/20251215/20251215054821176579210185871.JPG'; ?>" alt="<?php echo e($catName); ?>">
                 </div>
             </div>
             <?php endforeach; ?>
@@ -510,4 +515,10 @@ include 'templates/header.php';
     });
 </script>
 
-<?php include 'templates/footer.php'; ?>
+<?php
+if ($is_english) {
+    include 'templates/footer_en.php';
+} else {
+    include 'templates/footer.php';
+}
+?>

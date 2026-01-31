@@ -292,6 +292,7 @@ class Goods extends BaseShop
             $category_id = ',' . implode(',', $category_id) . ',';
             $data = [
                 'goods_name' => input('goods_name', ''),// 商品名称,
+                'goods_name_en' => input('goods_name_en', ''),// 商品名称(英文),
                 'goods_attr_class' => input('goods_attr_class', ''),// 商品类型id,
                 'goods_attr_name' => input('goods_attr_name', ''),// 商品类型名称,
 
@@ -302,7 +303,9 @@ class Goods extends BaseShop
                 'category_id' => $category_id,
                 'category_json' => $category_json,
                 'goods_image' => input('goods_image', ''),// 商品主图路径
+                'goods_image_en' => input('goods_image_en', ''),// 商品主图(英文)
                 'goods_content' => input('goods_content', ''),// 商品详情
+                'goods_content_en' => input('goods_content_en', ''),// 商品详情(英文)
                 'goods_state' => input('goods_state', ''),// 商品状态（1.正常0下架）
                 'price' => input('price', 0),// 商品价格（取第一个sku）
                 'market_price' => input('market_price', 0),// 市场价格（取第一个sku）
@@ -449,6 +452,7 @@ class Goods extends BaseShop
             $data = [
                 'goods_id' => input('goods_id', 0),// 商品id
                 'goods_name' => input('goods_name', ''),// 商品名称,
+                'goods_name_en' => input('goods_name_en', ''),// 商品名称(英文),
                 'goods_attr_class' => input('goods_attr_class', ''),// 商品类型id,
                 'goods_attr_name' => input('goods_attr_name', ''),// 商品类型名称,
                 'is_limit' => input('is_limit', '0'),// 商品是否限购,
@@ -457,7 +461,9 @@ class Goods extends BaseShop
                 'category_id' => $category_id,
                 'category_json' => $category_json,
                 'goods_image' => input('goods_image', ''),// 商品主图路径
+                'goods_image_en' => input('goods_image_en', ''),// 商品主图(英文)
                 'goods_content' => input('goods_content', ''),// 商品详情
+                'goods_content_en' => input('goods_content_en', ''),// 商品详情(英文)
                 'goods_state' => input('goods_state', ''),// 商品状态（1.正常0下架）
                 'price' => input('price', 0),// 商品价格（取第一个sku）
                 'market_price' => input('market_price', 0),// 市场价格（取第一个sku）

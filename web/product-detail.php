@@ -1,5 +1,6 @@
 <?php
 require_once 'api.php';
+require_once 'lang.php';
 
 // 获取goods_id参数，默认为3
 $goods_id = isset($_GET['id']) ? intval($_GET['id']) : 3;
@@ -8,11 +9,19 @@ $goods_id = isset($_GET['id']) ? intval($_GET['id']) : 3;
 $productResult = getGoodsDetail($goods_id);
 $product = $productResult['data']['goods_sku_detail'] ?? [];
 
+// 获取产品名称（多语言）
+$productName = $is_english && !empty($product['goods_name_en']) ? $product['goods_name_en'] : ($product['goods_name'] ?? '');
+$productContent = $is_english && !empty($product['goods_content_en']) ? $product['goods_content_en'] : ($product['goods_content'] ?? '');
+
 // 设置页面标题
-$page_title = $product['goods_name'] ?? '产品详情';
+$page_title = $productName ?: ($is_english ? 'Product Details' : '产品详情');
 
 // 包含头部
-include 'templates/header.php';
+if ($is_english) {
+    include 'templates/header_en.php';
+} else {
+    include 'templates/header.php';
+}
 ?>
 
 <style>
@@ -222,11 +231,11 @@ include 'templates/header.php';
 
 <!-- 面包屑导航 -->
 <div class="breadcrumb">
-    <a href="index.php">首页</a>
+    <a href="index.php?lang=<?php echo $current_lang; ?>"><?php echo __('breadcrumb_home'); ?></a>
     <span>></span>
-    <a href="products.php">产品中心</a>
+    <a href="products.php?lang=<?php echo $current_lang; ?>"><?php echo __('breadcrumb_products'); ?></a>
     <span>></span>
-    <span style="color: var(--title-color);"><?php echo e($product['goods_name'] ?? '产品详情'); ?></span>
+    <span style="color: var(--title-color);"><?php echo e($productName ?: __('product_detail')); ?></span>
 </div>
 
 <!-- 产品详情主容器 -->
@@ -237,21 +246,21 @@ include 'templates/header.php';
         <div class="product-images">
             <div class="main-image">
                 <?php
-                $main_image = !empty($product['sku_image']) ? $product['sku_image'] : 'https://hmlimg.oss-cn-shenzhen.aliyuncs.com/upload/1/common/images/20251215/20251215054821176579210185871.JPG';
+                $main_image = getLocalizedField($product, 'goods_image') ?: (!empty($product['sku_image']) ? $product['sku_image'] : 'https://hmlimg.oss-cn-shenzhen.aliyuncs.com/upload/1/common/images/20251215/20251215054821176579210185871.JPG');
                 ?>
-                <img src="<?php echo e($main_image); ?>" alt="<?php echo e($product['goods_name']); ?>">
+                <img src="<?php echo e($main_image); ?>" alt="<?php echo e($productName); ?>">
             </div>
         </div>
 
         <!-- 产品信息区 -->
         <div class="product-info">
-            <h1 class="product-title"><?php echo e($product['goods_name']); ?></h1>
+            <h1 class="product-title"><?php echo e($productName); ?></h1>
             <?php if (!empty($product['introduction'])): ?>
             <p class="product-subtitle"><?php echo e($product['introduction']); ?></p>
             <?php endif; ?>
 
             <div class="product-price-section">
-                <div class="price-label">价格</div>
+                <div class="price-label"><?php echo __('price'); ?></div>
                 <span class="product-price">¥<?php echo number_format($product['price'], 2); ?></span>
                 <?php if ($product['market_price'] > 0 && $product['market_price'] > $product['price']): ?>
                 <span style="font-size: 20px; color: #999; text-decoration: line-through; margin-left: 20px;">
@@ -263,57 +272,63 @@ include 'templates/header.php';
             <div class="product-specs">
                 <?php if (!empty($product['sku_name'])): ?>
                 <div class="spec-item">
-                    <div class="spec-label">产品规格</div>
+                    <div class="spec-label"><?php echo __('spec'); ?></div>
                     <div class="spec-value"><?php echo e($product['sku_name']); ?></div>
                 </div>
                 <?php endif; ?>
 
                 <?php if (!empty($product['unit'])): ?>
                 <div class="spec-item">
-                    <div class="spec-label">计量单位</div>
+                    <div class="spec-label"><?php echo __('unit'); ?></div>
                     <div class="spec-value"><?php echo e($product['unit']); ?></div>
                 </div>
                 <?php endif; ?>
 
                 <?php if ($product['stock_show'] == 1): ?>
                 <div class="spec-item">
-                    <div class="spec-label">库存</div>
-                    <div class="spec-value"><?php echo e($product['stock']); ?> 件</div>
+                    <div class="spec-label"><?php echo __('stock'); ?></div>
+                    <div class="spec-value"><?php echo e($product['stock']); ?> <?php echo __('pieces'); ?></div>
                 </div>
                 <?php endif; ?>
 
                 <?php if ($product['sale_show'] == 1): ?>
                 <div class="spec-item">
-                    <div class="spec-label">销量</div>
-                    <div class="spec-value"><?php echo e($product['sale_num']); ?> 件</div>
+                    <div class="spec-label"><?php echo __('sales'); ?></div>
+                    <div class="spec-value"><?php echo e($product['sale_num']); ?> <?php echo __('pieces'); ?></div>
                 </div>
                 <?php endif; ?>
             </div>
 
             <div class="buy-section">
-                <button class="buy-btn" onclick="showQRCode('order')">立即购买</button>
-                <button class="buy-btn" style="background: transparent; border: 2px solid var(--accent-line); color: var(--accent-line);" onclick="showQRCode('product')">咨询客服</button>
+                <button class="buy-btn" onclick="showQRCode('order')"><?php echo __('buy_now'); ?></button>
+                <button class="buy-btn" style="background: transparent; border: 2px solid var(--accent-line); color: var(--accent-line);" onclick="showQRCode('product')"><?php echo __('consult'); ?></button>
             </div>
         </div>
     </div>
 
     <!-- 产品详细描述 -->
-    <?php if (!empty($product['goods_content'])): ?>
+    <?php if (!empty($productContent)): ?>
     <div class="product-description">
-        <h2 class="description-title">产品详情</h2>
+        <h2 class="description-title"><?php echo __('product_detail'); ?></h2>
         <div class="description-content">
-            <?php echo $product['goods_content']; ?>
+            <?php echo $productContent; ?>
         </div>
     </div>
     <?php endif; ?>
 
     <?php else: ?>
     <div style="text-align: center; padding: 100px 0;">
-        <h2 style="font-size: 32px; color: var(--title-color); margin-bottom: 20px;">产品不存在</h2>
-        <p style="font-size: 18px; color: #666; margin-bottom: 30px;">抱歉,未找到该产品信息</p>
-        <a href="products.php" style="display: inline-block; padding: 15px 40px; background: var(--accent-line); color: #fff; text-decoration: none; border-radius: 25px;">返回产品列表</a>
+        <h2 style="font-size: 32px; color: var(--title-color); margin-bottom: 20px;"><?php echo __('product_not_found'); ?></h2>
+        <p style="font-size: 18px; color: #666; margin-bottom: 30px;"><?php echo __('product_not_found_desc'); ?></p>
+        <a href="products.php?lang=<?php echo $current_lang; ?>" style="display: inline-block; padding: 15px 40px; background: var(--accent-line); color: #fff; text-decoration: none; border-radius: 25px;"><?php echo __('back_to_list'); ?></a>
     </div>
     <?php endif; ?>
 </div>
 
-<?php include 'templates/footer.php'; ?>
+<?php
+if ($is_english) {
+    include 'templates/footer_en.php';
+} else {
+    include 'templates/footer.php';
+}
+?>

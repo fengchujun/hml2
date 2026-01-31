@@ -27,5 +27,10 @@ define('SITE_NAME', '华木兰茶文化');
 define('SITE_SLOGAN', '传承茶文化 品味茶生活');
 define('SITE_COPYRIGHT', '© 2024 华木兰 版权所有');
 
+// 网站信息(英文版)
+define('SITE_NAME_EN', 'Hua Mulan Tea Culture');
+define('SITE_SLOGAN_EN', 'Inherit tea culture, taste tea life');
+define('SITE_COPYRIGHT_EN', '© 2024 Hua Mulan. All rights reserved');
+
 // 视频URL
 define('HERO_VIDEO_URL', 'https://hmlimg.oss-cn-shenzhen.aliyuncs.com/upload/1/common/video/20260123/20260123055820176916230056427.mp4');
