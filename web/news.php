@@ -223,7 +223,7 @@ if ($is_english) {
     <?php if (!empty($newsList)): ?>
     <div class="news-grid">
         <?php foreach ($newsList as $news): ?>
-        <?php $articleTitle = $is_english && !empty($news['article_title_en']) ? $news['article_title_en'] : $news['article_title']; ?>
+        <?php $articleTitle = getLocalizedField($news, 'article_title'); ?>
         <div class="news-card" onclick="location.href='concept-detail.php?id=<?php echo $news['article_id']; ?>&lang=<?php echo $current_lang; ?>'">
             <div class="news-image">
                 <?php $newsCover = getLocalizedField($news, 'cover_img') ?: ($news['cover_img'] ?? ''); ?>

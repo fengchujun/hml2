@@ -269,7 +269,7 @@ if ($is_english) {
         <h2 class="sidebar-title"><?php echo __('product_category'); ?></h2>
         <ul class="sidebar-nav">
             <?php foreach ($categories as $index => $category): ?>
-            <?php $catName = $is_english && !empty($category['category_name_en']) ? $category['category_name_en'] : $category['category_name']; ?>
+            <?php $catName = getLocalizedField($category, 'category_name'); ?>
             <li>
                 <a href="#category<?php echo $category['category_id']; ?>" class="<?php echo $index == 0 ? 'active' : ''; ?>">
                     <?php echo e($catName); ?>
@@ -295,7 +295,7 @@ if ($is_english) {
             <?php if (!empty($goods)): ?>
             <div class="products-grid">
                 <?php foreach ($goods as $product): ?>
-                <?php $productName = $is_english && !empty($product['goods_name_en']) ? $product['goods_name_en'] : $product['goods_name']; ?>
+                <?php $productName = getLocalizedField($product, 'goods_name'); ?>
                 <div class="product-card" onclick="location.href='product-detail.php?id=<?php echo $product['goods_id']; ?>&lang=<?php echo $current_lang; ?>'">
                     <div class="product-image">
                         <?php

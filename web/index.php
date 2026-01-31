@@ -483,7 +483,7 @@ if ($is_english) {
         <h2 class="section-title"><?php echo __('section_products'); ?></h2>
         <div class="products-grid">
             <?php foreach (array_slice($categories, 0, 6) as $category): ?>
-            <?php $catName = $is_english && !empty($category['category_name_en']) ? $category['category_name_en'] : $category['category_name']; ?>
+            <?php $catName = getLocalizedField($category, 'category_name'); ?>
             <div class="product-card" onclick="location.href='products.php?lang=<?php echo $current_lang; ?>#category<?php echo $category['category_id']; ?>'">
                 <div class="product-title"><?php echo e($catName); ?></div>
                 <div class="product-image">

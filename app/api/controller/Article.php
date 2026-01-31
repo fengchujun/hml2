@@ -25,7 +25,7 @@ class Article extends BaseApi
             [ 'article_id', '=', $article_id ],
             [ 'status', '=', 1 ]
         ];
-        $field = 'article_id, article_title, article_abstract, category_id, cover_img, article_content, is_show_release_time, is_show_read_num, is_show_dianzan_num, read_num, dianzan_num, create_time, initial_read_num, initial_dianzan_num';
+        $field = 'article_id, article_title, article_title_en, article_abstract, category_id, cover_img, cover_img_en, article_content, article_content_en, is_show_release_time, is_show_read_num, is_show_dianzan_num, read_num, dianzan_num, create_time, initial_read_num, initial_dianzan_num';
         $res = $article_model->getArticleDetailInfo($condition, $field, 2);
         if (empty($res[ 'data' ])) {
             return $this->response($this->error('', '文章不存在'));

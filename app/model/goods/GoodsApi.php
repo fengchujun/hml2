@@ -56,10 +56,10 @@ class GoodsApi extends BaseModel
             ['g.sale_channel', 'in', $sale_channel],
         ];
 
-        $field = 'gs.goods_id,gs.sku_id,gs.qr_id,gs.goods_name,gs.sku_name,gs.is_consume_discount,gs.discount_config,gs.discount_method,gs.sku_spec_format,gs.price,gs.market_price,gs.member_price,gs.discount_price,gs.promotion_type,gs.start_time
+        $field = 'gs.goods_id,gs.sku_id,gs.qr_id,gs.goods_name,gs.goods_name_en,gs.sku_name,gs.sku_name_en,gs.is_consume_discount,gs.discount_config,gs.discount_method,gs.sku_spec_format,gs.price,gs.market_price,gs.member_price,gs.discount_price,gs.promotion_type,gs.start_time
         ,gs.end_time,gs.stock,gs.click_num,(g.sale_num + g.virtual_sale) as sale_num,gs.collect_num,gs.sku_image,gs.sku_images
-        ,gs.goods_content,gs.goods_state,gs.is_free_shipping,gs.goods_spec_format,gs.goods_attr_format,gs.introduction,gs.unit,gs.video_url
-        ,gs.is_virtual,gs.goods_service_ids,gs.max_buy,gs.min_buy,gs.is_limit,gs.limit_type,gs.support_trade_type,g.goods_image,g.keywords,g.stock_show,g.sale_show,g.market_price_show,g.promotion_addon,g.barrage_show,g.evaluate,g.goods_class,g.sale_store,g.sale_channel,g.label_name,g.category_id,g.is_fenxiao,g.fenxiao_type,gs.fenxiao_price,g.brand_id';
+        ,gs.goods_content,gs.goods_content_en,gs.goods_state,gs.is_free_shipping,gs.goods_spec_format,gs.goods_attr_format,gs.introduction,gs.unit,gs.video_url
+        ,gs.is_virtual,gs.goods_service_ids,gs.max_buy,gs.min_buy,gs.is_limit,gs.limit_type,gs.support_trade_type,g.goods_image,g.goods_image_en,g.keywords,g.stock_show,g.sale_show,g.market_price_show,g.promotion_addon,g.barrage_show,g.evaluate,g.goods_class,g.sale_store,g.sale_channel,g.label_name,g.category_id,g.is_fenxiao,g.fenxiao_type,gs.fenxiao_price,g.brand_id';
         $join = [
             ['goods g', 'g.goods_id = gs.goods_id', 'inner']
         ];

@@ -10,8 +10,8 @@ $productResult = getGoodsDetail($goods_id);
 $product = $productResult['data']['goods_sku_detail'] ?? [];
 
 // 获取产品名称（多语言）
-$productName = $is_english && !empty($product['goods_name_en']) ? $product['goods_name_en'] : ($product['goods_name'] ?? '');
-$productContent = $is_english && !empty($product['goods_content_en']) ? $product['goods_content_en'] : ($product['goods_content'] ?? '');
+$productName = getLocalizedField($product, 'goods_name');
+$productContent = getLocalizedField($product, 'goods_content');
 
 // 设置页面标题
 $page_title = $productName ?: ($is_english ? 'Product Details' : '产品详情');

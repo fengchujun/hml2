@@ -17,8 +17,8 @@ if (empty($article)) {
 }
 
 // 获取文章标题和内容（多语言）
-$articleTitle = $is_english && !empty($article['article_title_en']) ? $article['article_title_en'] : ($article['article_title'] ?? '');
-$articleContent = $is_english && !empty($article['article_content_en']) ? $article['article_content_en'] : ($article['article_content'] ?? '');
+$articleTitle = getLocalizedField($article, 'article_title');
+$articleContent = getLocalizedField($article, 'article_content');
 
 // 设置页面标题
 $page_title = $articleTitle ?: ($is_english ? 'Article' : '文章详情');

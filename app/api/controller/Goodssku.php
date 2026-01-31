@@ -52,7 +52,7 @@ class Goodssku extends BaseApi
         }
 
         $goods = new Goods();
-        $field = 'gs.goods_id,gs.sku_id,g.goods_image,g.goods_name,g.keywords,gs.sku_name,gs.sku_spec_format,gs.price,gs.market_price,gs.discount_price,gs.promotion_type
+        $field = 'gs.goods_id,gs.sku_id,g.goods_image,g.goods_image_en,g.goods_name,gs.goods_name_en,g.keywords,gs.sku_name,gs.sku_name_en,gs.sku_spec_format,gs.price,gs.market_price,gs.discount_price,gs.promotion_type
         ,gs.start_time,gs.end_time,gs.stock,gs.sku_image,gs.sku_images,gs.goods_spec_format,gs.unit,gs.max_buy,gs.min_buy,gs.is_limit,gs.limit_type';
 
         $info = $goods->getGoodsSkuDetail($sku_id, $this->site_id, $field);
@@ -135,7 +135,7 @@ class Goodssku extends BaseApi
             [ 'gs.sku_id', '=', $sku_id ],
             [ 'gs.site_id', '=', $this->site_id ]
         ];
-        $field = 'gs.goods_id,gs.sku_id,gs.goods_name,gs.is_limit,gs.limit_type,gs.sku_name,gs.sku_spec_format,gs.price,gs.discount_price,gs.stock,gs.sku_image,gs.goods_spec_format,gs.unit,gs.max_buy,gs.min_buy,gs.goods_state,g.stock_show';
+        $field = 'gs.goods_id,gs.sku_id,gs.goods_name,gs.goods_name_en,gs.is_limit,gs.limit_type,gs.sku_name,gs.sku_name_en,gs.sku_spec_format,gs.price,gs.discount_price,gs.stock,gs.sku_image,gs.goods_spec_format,gs.unit,gs.max_buy,gs.min_buy,gs.goods_state,g.stock_show';
         $join = [
             [ 'goods g', 'g.goods_id = gs.goods_id', 'inner' ]
         ];
@@ -180,7 +180,7 @@ class Goodssku extends BaseApi
             [ 'gs.goods_id', '=', $goods_id ],
             [ 'gs.site_id', '=', $this->site_id ]
         ];
-        $field = 'gs.sku_id,gs.sku_name,gs.sku_spec_format,gs.price,gs.discount_price,gs.promotion_type,gs.end_time,gs.stock,gs.sku_image,gs.goods_spec_format';
+        $field = 'gs.sku_id,gs.sku_name,gs.sku_name_en,gs.sku_spec_format,gs.price,gs.discount_price,gs.promotion_type,gs.end_time,gs.stock,gs.sku_image,gs.goods_spec_format';
         $join = [
             [ 'goods g', 'g.goods_id = gs.goods_id', 'inner' ]
         ];
@@ -377,7 +377,7 @@ class Goodssku extends BaseApi
         $condition[] = [ 'g.is_delete', '=', 0 ];
         $alias = 'gs';
 
-        $field = 'gs.is_consume_discount,gs.discount_config,gs.discount_method,gs.member_price,gs.goods_id,gs.sort,gs.sku_id,gs.sku_name,gs.price,gs.market_price,gs.discount_price,gs.stock,(g.sale_num + g.virtual_sale) as sale_num,(gs.sale_num + gs.virtual_sale) as sale_sort,gs.sku_image,gs.goods_name,gs.site_id,gs.is_free_shipping,gs.introduction,gs.promotion_type,g.goods_stock,g.goods_image,g.promotion_addon,gs.is_virtual,g.goods_spec_format,g.recommend_way,gs.max_buy,gs.min_buy,gs.unit,gs.is_limit,gs.limit_type,g.label_name,g.stock_show,g.sale_show,g.market_price_show,g.barrage_show,g.sale_channel,g.sale_store';
+        $field = 'gs.is_consume_discount,gs.discount_config,gs.discount_method,gs.member_price,gs.goods_id,gs.sort,gs.sku_id,gs.sku_name,gs.sku_name_en,gs.price,gs.market_price,gs.discount_price,gs.stock,(g.sale_num + g.virtual_sale) as sale_num,(gs.sale_num + gs.virtual_sale) as sale_sort,gs.sku_image,gs.goods_name,gs.goods_name_en,gs.site_id,gs.is_free_shipping,gs.introduction,gs.promotion_type,g.goods_stock,g.goods_image,g.goods_image_en,g.promotion_addon,gs.is_virtual,g.goods_spec_format,g.recommend_way,gs.max_buy,gs.min_buy,gs.unit,gs.is_limit,gs.limit_type,g.label_name,g.stock_show,g.sale_show,g.market_price_show,g.barrage_show,g.sale_channel,g.sale_store';
         $join = [
             [ 'goods g', 'gs.sku_id = g.sku_id', 'inner' ]
         ];
@@ -489,7 +489,7 @@ class Goodssku extends BaseApi
             $order_by = 'g.sort ' . $sort_config[ 'type' ] . ',g.create_time desc';
         }
 
-        $field = 'gs.goods_id,gs.sku_id,gs.price,gs.market_price,gs.discount_price,gs.stock,g.goods_stock,(g.sale_num + g.virtual_sale) as sale_num,g.goods_name,gs.site_id,gs.is_free_shipping,g.goods_image,gs.is_virtual,g.recommend_way,gs.unit,gs.promotion_type,g.label_name,g.goods_spec_format';
+        $field = 'gs.goods_id,gs.sku_id,gs.price,gs.market_price,gs.discount_price,gs.stock,g.goods_stock,(g.sale_num + g.virtual_sale) as sale_num,g.goods_name,g.goods_name_en,gs.site_id,gs.is_free_shipping,g.goods_image,g.goods_image_en,gs.is_virtual,g.recommend_way,gs.unit,gs.promotion_type,g.label_name,g.goods_spec_format';
         if ($token[ 'code' ] >= 0) {
             $field .= ',gs.is_consume_discount,gs.discount_config,gs.member_price,gs.discount_method';
         }
@@ -585,7 +585,7 @@ class Goodssku extends BaseApi
             $order_by = 'g.sort ' . $sort_config[ 'type' ] . ',g.create_time desc';
         }
 
-        $field = 'gs.goods_id,gs.sku_id,gs.price,gs.market_price,gs.discount_price,gs.stock,g.goods_stock,(g.sale_num + g.virtual_sale) as sale_num,g.goods_name,gs.site_id,gs.is_free_shipping,g.goods_image,gs.is_virtual,g.recommend_way,gs.unit,gs.promotion_type,g.label_name,g.goods_spec_format, gs.min_buy, gs.max_buy, gs.is_limit';
+        $field = 'gs.goods_id,gs.sku_id,gs.price,gs.market_price,gs.discount_price,gs.stock,g.goods_stock,(g.sale_num + g.virtual_sale) as sale_num,g.goods_name,g.goods_name_en,gs.site_id,gs.is_free_shipping,g.goods_image,g.goods_image_en,gs.is_virtual,g.recommend_way,gs.unit,gs.promotion_type,g.label_name,g.goods_spec_format, gs.min_buy, gs.max_buy, gs.is_limit';
         if ($token[ 'code' ] >= 0) {
             $field .= ',gs.is_consume_discount,gs.discount_config,gs.member_price,gs.discount_method';
         }
@@ -737,8 +737,8 @@ class Goodssku extends BaseApi
         $condition[] = [ 'g.is_delete', '=', 0 ];
         $alias = 'gs';
 
-        $field = 'gs.is_consume_discount,gs.discount_config,gs.discount_method,gs.member_price,gs.goods_id,gs.sku_id,gs.sku_name,gs.price,gs.market_price,gs.discount_price,gs.stock,gs.goods_name,gs.stock,g.goods_stock,
-        g.goods_image,gs.is_virtual,g.goods_spec_format,gs.max_buy,gs.min_buy,gs.unit,gs.is_limit,gs.limit_type,g.label_name,g.stock_show,g.sale_show,g.market_price_show,g.sale_channel';
+        $field = 'gs.is_consume_discount,gs.discount_config,gs.discount_method,gs.member_price,gs.goods_id,gs.sku_id,gs.sku_name,gs.sku_name_en,gs.price,gs.market_price,gs.discount_price,gs.stock,gs.goods_name,gs.goods_name_en,gs.stock,g.goods_stock,
+        g.goods_image,g.goods_image_en,gs.is_virtual,g.goods_spec_format,gs.max_buy,gs.min_buy,gs.unit,gs.is_limit,gs.limit_type,g.label_name,g.stock_show,g.sale_show,g.market_price_show,g.sale_channel';
         $join = [
             [ 'goods g', 'gs.sku_id = g.sku_id', 'inner' ]
         ];
@@ -838,7 +838,7 @@ class Goodssku extends BaseApi
         $order_by_pre = 'IF(g.goods_stock > 0, 1, 0) desc';
 
 
-        $field = 'gs.is_consume_discount,gs.discount_config,gs.discount_method,gs.member_price,g.market_price_show,g.sale_show,gs.goods_id,gs.sku_id,gs.sku_name,gs.price,gs.market_price,gs.discount_price,gs.stock,g.goods_stock,(g.sale_num + g.virtual_sale) as sale_num,gs.goods_name,gs.promotion_type,g.goods_image,gs.unit,g.label_name,gs.sku_image,gs.is_virtual';
+        $field = 'gs.is_consume_discount,gs.discount_config,gs.discount_method,gs.member_price,g.market_price_show,g.sale_show,gs.goods_id,gs.sku_id,gs.sku_name,gs.sku_name_en,gs.price,gs.market_price,gs.discount_price,gs.stock,g.goods_stock,(g.sale_num + g.virtual_sale) as sale_num,gs.goods_name,gs.goods_name_en,gs.promotion_type,g.goods_image,g.goods_image_en,gs.unit,g.label_name,gs.sku_image,gs.is_virtual';
 
         if ($guess_you_like[ 'sources' ] == 'browse') {
             $join = [
