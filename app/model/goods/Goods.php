@@ -109,6 +109,7 @@ class Goods extends GoodsCommon
 
             $goods_data = array(
                 'goods_image' => $goods_image,
+                'goods_image_en' => $data['goods_image_en'] ?? '',
                 'price' => !empty($data['goods_sku_data'][0]['price']) ? $data['goods_sku_data'][0]['price'] : '',
                 'market_price' => !empty($data['goods_sku_data'][0]['market_price']) ? $data['goods_sku_data'][0]['market_price'] : '',
                 'cost_price' => !empty($data['goods_sku_data'][0]['cost_price']) ? $data['goods_sku_data'][0]['cost_price'] : '',
@@ -128,6 +129,7 @@ class Goods extends GoodsCommon
 
             $common_data = array(
                 'goods_name' => $data['goods_name'],
+                'goods_name_en' => $data['goods_name_en'] ?? '',
                 'goods_class' => $this->goods_class['id'],
                 'goods_class_name' => $this->goods_class['name'],
                 'goods_attr_class' => $data['goods_attr_class'],
@@ -136,6 +138,7 @@ class Goods extends GoodsCommon
                 'limit_type' => $data['limit_type'] ?? 1,
                 'site_id' => $data['site_id'],
                 'goods_content' => $data['goods_content'],
+                'goods_content_en' => $data['goods_content_en'] ?? '',
                 'goods_state' => $data['goods_state'],
                 'goods_stock_alarm' => $data['goods_stock_alarm'],
                 'is_free_shipping' => $data['is_free_shipping'],
@@ -185,8 +188,10 @@ class Goods extends GoodsCommon
 
                 $goods_stock += $item['stock'];
 
+                $sku_name_en = !empty($data['goods_name_en']) ? ($data['goods_name_en'] . ' ' . $item['spec_name']) : '';
                 $sku_data = array(
                     'sku_name' => $data['goods_name'] . ' ' . $item['spec_name'],
+                    'sku_name_en' => $sku_name_en,
                     'spec_name' => $item['spec_name'],
                     'sku_no' => $item['sku_no'],
                     'sku_spec_format' => !empty($item['sku_spec_format']) ? json_encode($item['sku_spec_format']) : "",
@@ -364,7 +369,7 @@ class Goods extends GoodsCommon
             }
             $goods_data = array(
                 'goods_image' => $goods_image,
-//                'goods_stock' => $data[ 'goods_stock' ],
+                'goods_image_en' => $data['goods_image_en'] ?? '',
                 'price' => $data['goods_sku_data'][0]['price'],
                 'market_price' => $data['goods_sku_data'][0]['market_price'],
                 'cost_price' => $data['goods_sku_data'][0]['cost_price'],
@@ -385,12 +390,14 @@ class Goods extends GoodsCommon
 
             $common_data = array(
                 'goods_name' => $data['goods_name'],
+                'goods_name_en' => $data['goods_name_en'] ?? '',
                 'goods_class' => $this->goods_class['id'],
                 'goods_class_name' => $this->goods_class['name'],
                 'goods_attr_class' => $data['goods_attr_class'],
                 'goods_attr_name' => $data['goods_attr_name'],
                 'site_id' => $data['site_id'],
                 'goods_content' => $data['goods_content'],
+                'goods_content_en' => $data['goods_content_en'] ?? '',
                 'goods_state' => $data['goods_state'],
                 'goods_stock_alarm' => $data['goods_stock_alarm'],
                 'is_free_shipping' => $data['is_free_shipping'],
@@ -446,8 +453,10 @@ class Goods extends GoodsCommon
                     $discount_info_result = $discount_model->getDiscountGoodsInfo([['pdg.sku_id', '=', $item['sku_id']], ['pd.status', '=', 1]], 'id');
                     $discount_info = $discount_info_result['data'];
                 }
+                $sku_name_en = !empty($data['goods_name_en']) ? ($data['goods_name_en'] . ' ' . $item['spec_name']) : '';
                 $sku_data = array(
                     'sku_name' => $data['goods_name'] . ' ' . $item['spec_name'],
+                    'sku_name_en' => $sku_name_en,
                     'spec_name' => $item['spec_name'],
                     'sku_no' => $item['sku_no'],
                     'sku_spec_format' => !empty($item['sku_spec_format']) ? json_encode($item['sku_spec_format']) : "",
