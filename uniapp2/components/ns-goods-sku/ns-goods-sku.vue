@@ -174,6 +174,17 @@
 								</view>
 							</view>
 						</view>
+
+						<view class="total-price-wrap" v-if="type != 'point'">
+							<view class="total-price-line">
+								<text class="title font-size-base">总计金额</text>
+								<view class="total-price">
+									<text class="unit price-style small">￥</text>
+									<text class="price price-style large">{{ totalPrice.split('.')[0] }}</text>
+									<text class="unit price-style small">.{{ totalPrice.split('.')[1] }}</text>
+								</view>
+							</view>
+						</view>
 						
 						<ns-form :data="goodsForm" v-if="goodsForm" ref="form" @changeFormVal="changeFormVal"></ns-form>
 					</scroll-view>
@@ -359,6 +370,34 @@
 			}
 		},
 		computed: {
+			/**
+			 * 总计金额
+			 */
+			totalPrice: function() {
+				if (!this.goodsDetail) return '0.00';
+				let unitPrice = 0;
+				if (this.type == 'pintuan') {
+					unitPrice = parseFloat(this.pintuanPrice(this.goodsDetail) || 0);
+				} else if (this.type == 'groupbuy') {
+					unitPrice = parseFloat(this.goodsDetail.groupbuy_price || 0);
+				} else if (this.type == 'topic') {
+					unitPrice = parseFloat(this.goodsDetail.topic_price || 0);
+				} else if (this.type == 'seckill') {
+					unitPrice = parseFloat(this.goodsDetail.seckill_price || 0);
+				} else if (this.type == 'presale') {
+					unitPrice = parseFloat(this.goodsDetail.presale_deposit || 0);
+				} else {
+					let price = parseFloat(this.goodsDetail.price || 0);
+					let discountPrice = parseFloat(this.goodsDetail.discount_price || 0);
+					let memberPrice = parseFloat(this.goodsDetail.member_price || 0);
+					if (discountPrice > 0) {
+						unitPrice = memberPrice > 0 ? Math.min(discountPrice, memberPrice) : discountPrice;
+					} else {
+						unitPrice = memberPrice > 0 ? memberPrice : price;
+					}
+				}
+				return (unitPrice * (this.number || 0)).toFixed(2);
+			},
 			/**
 			 * 尾款
 			 */
@@ -1560,6 +1599,26 @@
 		background-color: $color-bg !important;
 		flex: 0;
 		padding: 0 5px;
+	}
+
+	.body-item .total-price-wrap .total-price-line {
+		padding: 20rpx 0;
+		line-height: 72rpx;
+		display: flex;
+		border-top: 2rpx solid $color-line;
+	}
+
+	.body-item .total-price-wrap .title {
+		font-weight: 400;
+	}
+
+	.body-item .total-price-wrap .total-price {
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		flex: 1;
+		font-weight: bold;
+		color: var(--price-color);
 	}
 
 	.footer {
