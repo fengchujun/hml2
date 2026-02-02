@@ -402,14 +402,14 @@
 			select: function() {
 				if (this.index == this.select) {
 					this.scrollTop = 0;
-					if (this.pageIndex == 0) {
-						this.getGoodsList();
-					} else if (this.$refs.loadingCover && this.loadType == 'part') {
-						this.$refs.loadingCover.show();
-						setTimeout(() => {
-							this.$refs.loadingCover.hide();
-						}, 300);
-					}
+					// 切换类目时，重置筛选状态，展示全部
+					this.filterType = 'category';
+					this.categoryId = -1;
+					this.brandId = -1;
+					this.labelId = -1;
+					this.pageIndex = 0;
+					this.totalPage = 1;
+					this.getGoodsList();
 					if (!this.contentWrapHeight) {
 						const query = uni.createSelectorQuery().in(this);
 						query.select('.scroll-goods-view').boundingClientRect(data => {
@@ -475,6 +475,17 @@
 			 * 选择标签
 			 */
 			selectLabel(index) {
+				// 再次点击已选中的标签，取消筛选，展示全部
+				if (this.filterType == 'label' && this.labelId == index) {
+					this.filterType = 'category';
+					this.labelId = -1;
+					this.categoryId = -1;
+					this.brandId = -1;
+					this.pageIndex = 0;
+					this.totalPage = 1;
+					this.getGoodsList();
+					return;
+				}
 				this.filterType = 'label';
 				this.labelId = index;
 				this.categoryId = -1;
