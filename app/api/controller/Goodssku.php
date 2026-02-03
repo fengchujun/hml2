@@ -432,7 +432,7 @@ class Goodssku extends BaseApi
         $order = $this->params['order'] ?? '';//排序（综合、销量、价格）
 
         $condition = [
-            [ 'g.goods_state', '=', 1 ],
+            [ '', 'exp', Db::raw("(g.goods_state = 1 OR g.goods_stock <= 0)") ],
             [ 'g.is_delete', '=', 0 ],
             [ 'g.site_id', '=', $this->site_id ],
             [ '', 'exp', Db::raw("(g.sale_channel = 'all' OR g.sale_channel = 'online')") ]
@@ -489,7 +489,7 @@ class Goodssku extends BaseApi
             $order_by = 'g.sort ' . $sort_config[ 'type' ] . ',g.create_time desc';
         }
 
-        $field = 'gs.goods_id,gs.sku_id,gs.price,gs.market_price,gs.discount_price,gs.stock,g.goods_stock,(g.sale_num + g.virtual_sale) as sale_num,g.goods_name,gs.site_id,gs.is_free_shipping,g.goods_image,gs.is_virtual,g.recommend_way,gs.unit,gs.promotion_type,g.label_name,g.goods_spec_format';
+        $field = 'gs.goods_id,gs.sku_id,gs.price,gs.market_price,gs.discount_price,gs.stock,g.goods_stock,(g.sale_num + g.virtual_sale) as sale_num,g.goods_name,gs.site_id,gs.is_free_shipping,g.goods_image,gs.is_virtual,g.recommend_way,gs.unit,gs.promotion_type,g.label_name,g.goods_spec_format,g.stock_show';
         if ($token[ 'code' ] >= 0) {
             $field .= ',gs.is_consume_discount,gs.discount_config,gs.member_price,gs.discount_method';
         }
