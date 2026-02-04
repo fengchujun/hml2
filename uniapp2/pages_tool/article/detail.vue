@@ -50,8 +50,25 @@
 			if (this.articleId == 0) {
 				this.$util.redirectTo('/pages_tool/article/list', {}, 'redirectTo');
 			}
+
+			// 接收 source_member
+			if (options.source_member) {
+				uni.setStorageSync('source_member', options.source_member);
+				// 未登录时跳转到登录页
+				if (!this.storeToken) {
+					let currentUrl = '/pages_tool/article/detail?article_id=' + this.articleId + '&source_member=' + options.source_member;
+					this.$util.redirectTo('/pages_tool/login/index', {
+						back: encodeURIComponent(currentUrl)
+					});
+					return;
+				}
+			}
 		},
 		onShow() {
+			// 记录分享关系
+			if (this.storeToken && uni.getStorageSync('source_member')) {
+				this.$util.onSourceMember(uni.getStorageSync('source_member'));
+			}
 			this.getData();
 		},
 		methods: {
@@ -97,6 +114,7 @@
 		onShareAppMessage(res) {
 			var title = this.detail.article_title;
 			var path = '/pages_tool/article/detail?article_id=' + this.articleId;
+			if (this.memberInfo && this.memberInfo.member_id) path += '&source_member=' + this.memberInfo.member_id;
 			return {
 				title: title,
 				path: path,
@@ -108,6 +126,7 @@
 		onShareTimeline() {
 			var title = this.detail.article_title;
 			var query = 'article_id=' + this.articleId;
+			if (this.memberInfo && this.memberInfo.member_id) query += '&source_member=' + this.memberInfo.member_id;
 			return {
 				title: title,
 				query: query,

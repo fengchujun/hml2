@@ -82,9 +82,7 @@
 				list: [],
 				sort: 1,
 				types: '',
-				couponBtnSwitch: false,
-				//分享建立上下级id
-				mpShareData: null //小程序分享数据
+				couponBtnSwitch: false
 			};
 		},
 		onLoad(option) {
@@ -104,6 +102,14 @@
 			//小程序分享接收source_member
 			if (option.source_member) {
 				uni.setStorageSync('source_member', option.source_member);
+				// 未登录时跳转到登录页
+				if (!this.storeToken) {
+					let currentUrl = '/pages_tool/goods/coupon?source_member=' + option.source_member;
+					this.$util.redirectTo('/pages_tool/login/index', {
+						back: encodeURIComponent(currentUrl)
+					});
+					return;
+				}
 			}
 			// 小程序扫码进入，接收source_member
 			if (option.scene) {
@@ -123,21 +129,27 @@
 			if (this.storeToken && uni.getStorageSync('source_member')) {
 				this.$util.onSourceMember(uni.getStorageSync('source_member'));
 			}
-
-			//小程序分享
-			// #ifdef MP-WEIXIN
-			this.$util.getMpShare().then(res => {
-				this.mpShareData = res;
-			});
-			// #endif
 		},
 		//分享给好友
 		onShareAppMessage() {
-			return this.mpShareData.appMessage;
+			var path = '/pages_tool/goods/coupon';
+			if (this.memberInfo && this.memberInfo.member_id) path += '?source_member=' + this.memberInfo.member_id;
+			return {
+				title: '优惠券',
+				path: path,
+				success: res => {},
+				fail: res => {}
+			};
 		},
 		//分享到朋友圈
 		onShareTimeline() {
-			return this.mpShareData.timeLine;
+			var query = '';
+			if (this.memberInfo && this.memberInfo.member_id) query = 'source_member=' + this.memberInfo.member_id;
+			return {
+				title: '优惠券',
+				query: query,
+				imageUrl: ''
+			};
 		},
 		methods: {
 			changeSort(sort, types) {

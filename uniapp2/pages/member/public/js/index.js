@@ -16,6 +16,14 @@ export default {
 	onLoad(data) {
 		uni.hideTabBar();
 		this.name = 'DIY_VIEW_MEMBER_INDEX';
+		// source_member 未登录时跳转到登录页
+		if (data.source_member && !this.storeToken) {
+			let currentUrl = '/pages/member/index?source_member=' + data.source_member;
+			this.$util.redirectTo('/pages_tool/login/index', {
+				back: encodeURIComponent(currentUrl)
+			});
+			return;
+		}
 		if (data.code) {
 			this.$api.sendRequest({
 				url: '/wechat/api/wechat/authcodetoopenid',

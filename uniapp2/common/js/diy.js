@@ -367,10 +367,6 @@ export default {
 				//小程序分享
 				// #ifdef MP-WEIXIN
 					let path = this.$util.getCurrentRoute().path;
-					if (path == '/pages/member/index') {
-						this.mpShareData = {};
-						return;
-					}
 					let share_path = path;
 					if(this.$store.state.memberInfo && this.$store.state.memberInfo.member_id){
 						share_path = this.$util.getCurrentShareRoute(this.$store.state.memberInfo.member_id).path
