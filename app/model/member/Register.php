@@ -190,18 +190,21 @@ class Register extends BaseModel
                 $coupon_model->giveCoupon($coupon_data, $data['site_id'], $member_id, Coupon::GET_TYPE_ACTIVITY_GIVE);
             }
 
-            // 推荐注册（source_member）赠送优惠券
+            // 推荐注册（source_member）赠送优惠券，仅推荐人 member_level=6 时赠送
             if (!empty($data_reg['source_member'])) {
-                $source_coupon_model = new \addon\memberregister\model\SourceMemberCoupon();
-                $source_coupon_config = $source_coupon_model->getEnabledList($data['site_id']);
-                if (!empty($source_coupon_config['data'])) {
-                    $source_coupon_data = [];
-                    foreach ($source_coupon_config['data'] as $sc) {
-                        $source_coupon_data[] = ['coupon_type_id' => $sc['coupon_type_id'], 'num' => $sc['num'] ?? 1];
-                    }
-                    if (!empty($source_coupon_data)) {
-                        $source_coupon = new Coupon();
-                        $source_coupon->giveCoupon($source_coupon_data, $data['site_id'], $member_id, Coupon::GET_TYPE_ACTIVITY_GIVE);
+                $source_member_info = model('member')->getInfo([['member_id', '=', $data_reg['source_member']]], 'member_level');
+                if ($source_member_info && $source_member_info['member_level'] == 6) {
+                    $source_coupon_model = new \addon\memberregister\model\SourceMemberCoupon();
+                    $source_coupon_config = $source_coupon_model->getEnabledList($data['site_id']);
+                    if (!empty($source_coupon_config['data'])) {
+                        $source_coupon_data = [];
+                        foreach ($source_coupon_config['data'] as $sc) {
+                            $source_coupon_data[] = ['coupon_type_id' => $sc['coupon_type_id'], 'num' => $sc['num'] ?? 1];
+                        }
+                        if (!empty($source_coupon_data)) {
+                            $source_coupon = new Coupon();
+                            $source_coupon->giveCoupon($source_coupon_data, $data['site_id'], $member_id, Coupon::GET_TYPE_ACTIVITY_GIVE);
+                        }
                     }
                 }
             }

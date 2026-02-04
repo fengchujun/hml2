@@ -488,6 +488,7 @@ class OrderCreate extends BaseModel
             \think\facade\Log::write('calculateDistributionCommission - 开始计算，member_id='.$this->member_id.', goods_list='.json_encode($this->goods_list));
 
             $member_source_goods_model = new \app\model\member\MemberSourceGoods();
+            $ratio_commission = 0; // 比例佣金累计（fx_level_commission < 1 时使用）
             foreach ($this->goods_list as $goods) {
                 \think\facade\Log::write('calculateDistributionCommission - 检查商品: goods_id='.$goods['goods_id']);
 
@@ -498,6 +499,13 @@ class OrderCreate extends BaseModel
                 if ($record) {
                     $distributor_id = $record['distributor_id'];
                     $fx_level = $record['distributor_level'];
+
+                    // 仅推荐人 member_level=6 时才计算分佣
+                    $distributor_member = model('member')->getInfo([['member_id', '=', $distributor_id]], 'member_level');
+                    if (!$distributor_member || $distributor_member['member_level'] != 6) {
+                        \think\facade\Log::write('calculateDistributionCommission - 推荐人 member_level 不等于6，跳过分佣: distributor_id='.$distributor_id.', member_level='.($distributor_member['member_level'] ?? 'null'));
+                        continue;
+                    }
 
                     // 获取商品的佣金和完成优惠券配置
                     $commission_field = 'fx_level' . $fx_level . '_commission';
@@ -513,9 +521,17 @@ class OrderCreate extends BaseModel
                     if ($goods_info) {
                         // 计算佣金
                         if (isset($goods_info[$commission_field]) && $goods_info[$commission_field] > 0) {
-                            // 佣金 = 单品佣金 × 数量
-                            $total_commission += $goods_info[$commission_field] * $goods['num'];
-                            \think\facade\Log::write('calculateDistributionCommission - 累加佣金: '.$goods_info[$commission_field].' × '.$goods['num'].' = '.($goods_info[$commission_field] * $goods['num']));
+                            $commission_value = floatval($goods_info[$commission_field]);
+                            if ($commission_value < 1) {
+                                // 小于1视为比例，以订单实际支付金额的比例计算佣金
+                                // 取最大的比例值（同一推荐人同一等级，比例应一致）
+                                $ratio_commission = max($ratio_commission, $commission_value);
+                                \think\facade\Log::write('calculateDistributionCommission - 比例佣金模式: rate='.$commission_value.', pay_money='.$this->pay_money);
+                            } else {
+                                // 大于等于1视为固定金额，佣金 = 单品佣金 × 数量
+                                $total_commission += $commission_value * $goods['num'];
+                                \think\facade\Log::write('calculateDistributionCommission - 固定佣金模式: '.$commission_value.' × '.$goods['num'].' = '.($commission_value * $goods['num']));
+                            }
                         }
 
                         // 记录完成优惠券
@@ -529,6 +545,12 @@ class OrderCreate extends BaseModel
                 } else {
                     \think\facade\Log::write('calculateDistributionCommission - 无分销记录，跳过此商品');
                 }
+            }
+
+            // 比例佣金：以实际支付金额计算
+            if ($ratio_commission > 0) {
+                $total_commission += round($this->pay_money * $ratio_commission, 2);
+                \think\facade\Log::write('calculateDistributionCommission - 比例佣金计算: pay_money='.$this->pay_money.' × rate='.$ratio_commission.' = '.round($this->pay_money * $ratio_commission, 2));
             }
 
             // 如果订单来自分销员推荐，获取分销员的仓库ID
