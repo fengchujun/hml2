@@ -521,11 +521,12 @@ class MemberVip extends BaseModel
         $unsettled_commission = 0;
         $settled_commission = 0;
 
-        // 未结算佣金
+        // 未结算佣金（仅统计已支付的订单）
         $unsettled_result = model('order')->getSum([
             ['distributor_id', '=', $member_id],
             ['site_id', '=', $site_id],
-            ['commission_settled', '=', 0]
+            ['commission_settled', '=', 0],
+            ['order_status', '>', 0]
         ], 'commission_amount');
         $unsettled_commission = $unsettled_result ? floatval($unsettled_result) : 0;
 
@@ -537,10 +538,11 @@ class MemberVip extends BaseModel
         ], 'commission_amount');
         $settled_commission = $settled_result ? floatval($settled_result) : 0;
 
-        // 8. 获取分销订单列表（最近20条）
+        // 8. 获取分销订单列表（最近20条，仅已支付的订单）
         $distribution_orders = model('order')->getList([
             ['distributor_id', '=', $member_id],
-            ['site_id', '=', $site_id]
+            ['site_id', '=', $site_id],
+            ['order_status', '>', 0]
         ], 'order_id, order_no, order_money, commission_amount, commission_settled, member_id, order_status, create_time', 'create_time desc', 'a', [], '', 20);
 
         // 为订单列表添加买家昵称并格式化数据
