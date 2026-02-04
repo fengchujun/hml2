@@ -487,76 +487,66 @@ class OrderCreate extends BaseModel
         try {
             \think\facade\Log::write('calculateDistributionCommission - 开始计算，member_id='.$this->member_id.', goods_list='.json_encode($this->goods_list));
 
-            $member_source_goods_model = new \app\model\member\MemberSourceGoods();
-            $ratio_commission = 0; // 比例佣金累计（fx_level_commission < 1 时使用）
-            foreach ($this->goods_list as $goods) {
-                \think\facade\Log::write('calculateDistributionCommission - 检查商品: goods_id='.$goods['goods_id']);
+            // 直接获取买家的 source_member（推荐人）
+            $buyer_info = model('member')->getInfo([['member_id', '=', $this->member_id]], 'source_member');
+            $source_member_id = $buyer_info['source_member'] ?? 0;
+            \think\facade\Log::write('calculateDistributionCommission - 买家 source_member='.$source_member_id);
 
-                // 检查该商品是否通过分销员访问
-                $record = $member_source_goods_model->getRecord($this->member_id, $goods['goods_id']);
-                \think\facade\Log::write('calculateDistributionCommission - 分销记录: '.json_encode($record));
+            if ($source_member_id > 0) {
+                // 查询推荐人信息，仅 member_level=6 时才分佣
+                $source_member_info = model('member')->getInfo([['member_id', '=', $source_member_id]], 'member_id, member_level, fx_level, warehouse_id');
+                \think\facade\Log::write('calculateDistributionCommission - 推荐人信息: '.json_encode($source_member_info));
 
-                if ($record) {
-                    $distributor_id = $record['distributor_id'];
-                    $fx_level = $record['distributor_level'];
+                if ($source_member_info && $source_member_info['member_level'] == 6) {
+                    $distributor_id = $source_member_id;
+                    $fx_level = $source_member_info['fx_level'] ?: 1;
+                    $warehouse_id = $source_member_info['warehouse_id'] ?? 0;
 
-                    // 仅推荐人 member_level=6 时才计算分佣
-                    $distributor_member = model('member')->getInfo([['member_id', '=', $distributor_id]], 'member_level');
-                    if (!$distributor_member || $distributor_member['member_level'] != 6) {
-                        \think\facade\Log::write('calculateDistributionCommission - 推荐人 member_level 不等于6，跳过分佣: distributor_id='.$distributor_id.', member_level='.($distributor_member['member_level'] ?? 'null'));
-                        continue;
-                    }
-
-                    // 获取商品的佣金和完成优惠券配置
                     $commission_field = 'fx_level' . $fx_level . '_commission';
                     $complete_coupon_field = 'fx_level' . $fx_level . '_complete_coupon';
-                    \think\facade\Log::write('calculateDistributionCommission - 查询字段: commission_field='.$commission_field.', complete_coupon_field='.$complete_coupon_field);
+                    \think\facade\Log::write('calculateDistributionCommission - 使用字段: commission_field='.$commission_field.', complete_coupon_field='.$complete_coupon_field);
 
-                    $goods_info = model('goods')->getInfo(
-                        [['goods_id', '=', $goods['goods_id']]],
-                        $commission_field . ',' . $complete_coupon_field
-                    );
-                    \think\facade\Log::write('calculateDistributionCommission - 商品信息: '.json_encode($goods_info));
+                    $ratio_commission = 0;
+                    foreach ($this->goods_list as $goods) {
+                        $goods_info = model('goods')->getInfo(
+                            [['goods_id', '=', $goods['goods_id']]],
+                            $commission_field . ',' . $complete_coupon_field
+                        );
+                        \think\facade\Log::write('calculateDistributionCommission - 商品 goods_id='.$goods['goods_id'].', 信息: '.json_encode($goods_info));
 
-                    if ($goods_info) {
-                        // 计算佣金
-                        if (isset($goods_info[$commission_field]) && $goods_info[$commission_field] > 0) {
-                            $commission_value = floatval($goods_info[$commission_field]);
-                            if ($commission_value < 1) {
-                                // 小于1视为比例，以订单实际支付金额的比例计算佣金
-                                // 取最大的比例值（同一推荐人同一等级，比例应一致）
-                                $ratio_commission = max($ratio_commission, $commission_value);
-                                \think\facade\Log::write('calculateDistributionCommission - 比例佣金模式: rate='.$commission_value.', pay_money='.$this->pay_money);
-                            } else {
-                                // 大于等于1视为固定金额，佣金 = 单品佣金 × 数量
-                                $total_commission += $commission_value * $goods['num'];
-                                \think\facade\Log::write('calculateDistributionCommission - 固定佣金模式: '.$commission_value.' × '.$goods['num'].' = '.($commission_value * $goods['num']));
+                        if ($goods_info) {
+                            // 计算佣金
+                            if (isset($goods_info[$commission_field]) && $goods_info[$commission_field] > 0) {
+                                $commission_value = floatval($goods_info[$commission_field]);
+                                if ($commission_value < 1) {
+                                    // 小于1视为比例，以订单实际支付金额的比例计算佣金
+                                    $ratio_commission = max($ratio_commission, $commission_value);
+                                    \think\facade\Log::write('calculateDistributionCommission - 比例佣金模式: rate='.$commission_value.', pay_money='.$this->pay_money);
+                                } else {
+                                    // 大于等于1视为固定金额，佣金 = 单品佣金 × 数量
+                                    $total_commission += $commission_value * $goods['num'];
+                                    \think\facade\Log::write('calculateDistributionCommission - 固定佣金模式: '.$commission_value.' × '.$goods['num'].' = '.($commission_value * $goods['num']));
+                                }
+                            }
+
+                            // 记录完成优惠券
+                            if (isset($goods_info[$complete_coupon_field]) && $goods_info[$complete_coupon_field] > 0) {
+                                $complete_coupons[$goods['goods_id']] = $goods_info[$complete_coupon_field];
+                                \think\facade\Log::write('calculateDistributionCommission - 记录完成优惠券: goods_id='.$goods['goods_id'].', coupon_type_id='.$goods_info[$complete_coupon_field]);
                             }
                         }
+                    }
 
-                        // 记录完成优惠券
-                        if (isset($goods_info[$complete_coupon_field]) && $goods_info[$complete_coupon_field] > 0) {
-                            $complete_coupons[$goods['goods_id']] = $goods_info[$complete_coupon_field];
-                            \think\facade\Log::write('calculateDistributionCommission - 记录完成优惠券: goods_id='.$goods['goods_id'].', coupon_type_id='.$goods_info[$complete_coupon_field]);
-                        } else {
-                            \think\facade\Log::write('calculateDistributionCommission - 未配置完成优惠券或为0: complete_coupon_field='.$complete_coupon_field.', value='.($goods_info[$complete_coupon_field] ?? 'null'));
-                        }
+                    // 比例佣金：以实际支付金额计算
+                    if ($ratio_commission > 0) {
+                        $total_commission += round($this->pay_money * $ratio_commission, 2);
+                        \think\facade\Log::write('calculateDistributionCommission - 比例佣金计算: pay_money='.$this->pay_money.' × rate='.$ratio_commission.' = '.round($this->pay_money * $ratio_commission, 2));
                     }
                 } else {
-                    \think\facade\Log::write('calculateDistributionCommission - 无分销记录，跳过此商品');
+                    \think\facade\Log::write('calculateDistributionCommission - 推荐人 member_level 不等于6，跳过分佣: source_member='.$source_member_id.', member_level='.($source_member_info['member_level'] ?? 'null'));
                 }
-            }
-
-            // 比例佣金：以实际支付金额计算
-            if ($ratio_commission > 0) {
-                $total_commission += round($this->pay_money * $ratio_commission, 2);
-                \think\facade\Log::write('calculateDistributionCommission - 比例佣金计算: pay_money='.$this->pay_money.' × rate='.$ratio_commission.' = '.round($this->pay_money * $ratio_commission, 2));
-            }
-
-            // 如果订单来自分销员推荐，获取分销员的仓库ID
-            if ($distributor_id > 0) {
-                $distributor = model('member')->getInfo([['member_id', '=', $distributor_id]], 'warehouse_id');
-                $warehouse_id = $distributor['warehouse_id'] ?? 0;
+            } else {
+                \think\facade\Log::write('calculateDistributionCommission - 买家无推荐人，跳过分佣');
             }
 
             \think\facade\Log::write('calculateDistributionCommission - 最终结果: distributor_id='.$distributor_id.', commission='.$total_commission.', warehouse_id='.$warehouse_id.', complete_coupons='.json_encode($complete_coupons));
