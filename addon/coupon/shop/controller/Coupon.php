@@ -52,7 +52,12 @@ class Coupon extends BaseShop
                 'is_show' => input('is_show', 0),//是否允许直接领取 1:是 0：否 允许直接领取，用户才可以在手机端和PC端进行领取，否则只能以活动的形式发放。
                 'use_channel' => input('use_channel', 'all'),//适用渠道 all  online  offline
                 'use_store' => input('use_store', 'all'),//适用门店 all  门店id组
+                'is_stackable' => input('is_stackable', 0),//是否可叠加使用 0-否 1-是
             ];
+            // 仅满减无门槛券可设置叠加
+            if ($data['type'] != 'reward' || $data['at_least'] > 0) {
+                $data['is_stackable'] = 0;
+            }
             $coupon_type_model = new CouponTypeModel();
             return $coupon_type_model->addCouponType($data);
         } else {
@@ -90,7 +95,12 @@ class Coupon extends BaseShop
                 'is_show' => input('is_show', 0),//是否允许直接领取 1:是 0：否 允许直接领取，用户才可以在手机端和PC端进行领取，否则只能以活动的形式发放。
                 'use_channel' => input('use_channel', 'all'),//适用渠道 all  online  offline
                 'use_store' => input('use_store', 'all'),//适用门店 all  门店id组
+                'is_stackable' => input('is_stackable', 0),//是否可叠加使用 0-否 1-是
             ];
+            // 仅满减无门槛券可设置叠加
+            if ($data['type'] != 'reward' || $data['at_least'] > 0) {
+                $data['is_stackable'] = 0;
+            }
             $coupon_type_id = input('coupon_type_id', 0);
 
             return $coupon_type_model->editCouponType($data, $coupon_type_id);

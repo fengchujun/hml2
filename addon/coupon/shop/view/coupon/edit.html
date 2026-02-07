@@ -217,6 +217,16 @@
 		</div>
 	</div>
 
+	<div class="layui-form-item stackable-option" style="display:none;">
+		<label class="layui-form-label">是否可叠加使用：</label>
+		<div class="layui-input-block">
+			<input type="checkbox" name="is_stackable" lay-filter="is_stackable" value="1" lay-skin="switch" {if condition="$coupon_type_info.is_stackable == 1" }checked{/if} />
+		</div>
+		<div class="word-aux">
+			<p>开启后，该优惠券可与其他优惠券叠加使用（仅满减无门槛券可设置）</p>
+		</div>
+	</div>
+
 	<div class="layui-form-item">
 		<label class="layui-form-label">是否允许直接领取：</label>
 		<div class="layui-input-block">
@@ -468,6 +478,19 @@
 		var delRule, selectedGoodsId = [], goods_id = [], table;
 		var goods_list = {:json_encode($coupon_type_info.goods_list, JSON_UNESCAPED_UNICODE)};
 
+		// 控制叠加选项显示/隐藏
+		function toggleStackableOption() {
+			var type = $('input[name="type"]').val();
+			var at_least = parseFloat($('input[name="at_least"]').val()) || 0;
+			if (type == 'reward' && at_least == 0) {
+				$('.stackable-option').show();
+			} else {
+				$('.stackable-option').hide();
+				$('input[name="is_stackable"]').prop('checked', false);
+			}
+		}
+		toggleStackableOption();
+
 		$("body").off("change", 'input[name="money"]').on("change", 'input[name="money"]', function() {
 			var aa = $('input[name="money"]').val();
 			$('.priceaaaa').html('￥' + aa)
@@ -480,7 +503,8 @@
 
 		$('input[name="at_least"]').change(function() {
 			var cc = $('input[name="at_least"]').val();
-			$('.use_price2').html(cc)
+			$('.use_price2').html(cc);
+			toggleStackableOption();
 		})
 
 		$('input[name="fixed_term"]').change(function() {
@@ -849,6 +873,7 @@
 
 				}
 				$('#coupon_type').html(html);
+			toggleStackableOption();
 			});
 		});
 

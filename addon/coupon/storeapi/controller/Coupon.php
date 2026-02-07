@@ -49,7 +49,12 @@ class Coupon extends BaseStoreApi
             'use_channel' => $this->params[ 'use_channel' ] ?? 0,//适用渠道 all  online  offline
             'use_store' => ',' . $this->store_id . ',',//适用门店 all  门店id组
             'store_id' => $this->store_id,
+            'is_stackable' => $this->params[ 'is_stackable' ] ?? 0,//是否可叠加使用 0-否 1-是
         ];
+        // 仅满减无门槛券可设置叠加
+        if ($data['type'] != 'reward' || $data['at_least'] > 0) {
+            $data['is_stackable'] = 0;
+        }
         $coupon_type_model = new CouponTypeModel();
         return $this->response($coupon_type_model->addCouponType($data));
     }
@@ -82,7 +87,12 @@ class Coupon extends BaseStoreApi
             'is_show' => $this->params[ 'is_show' ] ?? 0,//是否允许直接领取 1:是 0：否 允许直接领取，用户才可以在手机端和PC端进行领取，否则只能以活动的形式发放。
             'use_store' => ',' . $this->store_id . ',',//适用门店 all  门店id组
             'use_channel' => $this->params[ 'use_channel' ] ?? 0,//适用渠道 all  online  offline
+            'is_stackable' => $this->params[ 'is_stackable' ] ?? 0,//是否可叠加使用 0-否 1-是
         ];
+        // 仅满减无门槛券可设置叠加
+        if ($data['type'] != 'reward' || $data['at_least'] > 0) {
+            $data['is_stackable'] = 0;
+        }
         $coupon_type_id = $this->params[ 'coupon_type_id' ] ?? 0;
         $condition = [
             //仅包含本门店的

@@ -67,6 +67,12 @@
                 <label>使用门槛：</label>
                 <span>{$info.at_least} 元</span>
             </div>
+            {if $info.type == 'reward' && $info.at_least == 0}
+            <div class="promotion-view-item">
+                <label>是否可叠加使用：</label>
+                <span>{$info.is_stackable == 1 ? '是' : '否'}</span>
+            </div>
+            {/if}
             <div class="promotion-view-item">
                 <label>有效期：</label>
                 <span>
