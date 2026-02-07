@@ -280,7 +280,7 @@ export default {
 			//查询优惠券
 			if (this.modules.indexOf('coupon') != -1) {
 				let paymentParams = this.handleCreateData()
-				this.orderCreateData.coupon.coupon_ids = [];
+				this.$set(this.orderCreateData, 'coupon', { coupon_ids: [] });
 				this.$api.sendRequest({
 					url: '/api/ordercreate/getcouponlist',
 					data: paymentParams,
@@ -308,7 +308,7 @@ export default {
 		 */
 		autoSelectBestCoupons() {
 			if (!this.coupon_list || this.coupon_list.length == 0) {
-				this.orderCreateData.coupon.coupon_ids = [];
+				this.$set(this.orderCreateData, 'coupon', { coupon_ids: [] });
 				return;
 			}
 			let stackableCoupons = this.coupon_list.filter(c => c.is_stackable == 1);
@@ -323,7 +323,7 @@ export default {
 			// 找出最优的单张不可叠加券优惠
 			let bestNonStackable = null;
 			let bestNonStackableDiscount = 0;
-			let goodsMoney = this.paymentData ? this.paymentData.goods_money : 0;
+			let goodsMoney = this.paymentData ? parseFloat(this.paymentData.goods_money) : 0;
 			nonStackableCoupons.forEach(c => {
 				let discount = 0;
 				if (c.type == 'reward' || c.type == 'divideticket') {
@@ -339,13 +339,15 @@ export default {
 			});
 
 			// 选择优惠更大的方案
+			let selectedIds = [];
 			if (stackableTotal >= bestNonStackableDiscount && stackableCoupons.length > 0) {
-				this.orderCreateData.coupon.coupon_ids = stackableCoupons.map(c => c.coupon_id);
+				selectedIds = stackableCoupons.map(c => c.coupon_id);
 			} else if (bestNonStackable) {
-				this.orderCreateData.coupon.coupon_ids = [bestNonStackable.coupon_id];
+				selectedIds = [bestNonStackable.coupon_id];
 			} else if (stackableCoupons.length > 0) {
-				this.orderCreateData.coupon.coupon_ids = stackableCoupons.map(c => c.coupon_id);
+				selectedIds = stackableCoupons.map(c => c.coupon_id);
 			}
+			this.$set(this.orderCreateData, 'coupon', { coupon_ids: selectedIds });
 		},
 		/**
 		 * 处理商品表单数据
@@ -415,11 +417,11 @@ export default {
 
 						// 同步后端返回的已使用券ID
 						if (res.data.coupon_ids && res.data.coupon_ids.length > 0) {
-							this.orderCreateData.coupon.coupon_ids = res.data.coupon_ids;
+							this.$set(this.orderCreateData, 'coupon', { coupon_ids: [].concat(res.data.coupon_ids) });
 						} else if (res.data.coupon_id > 0) {
-							this.orderCreateData.coupon.coupon_ids = [res.data.coupon_id];
+							this.$set(this.orderCreateData, 'coupon', { coupon_ids: [res.data.coupon_id] });
 						} else {
-							this.orderCreateData.coupon.coupon_ids = [];
+							this.$set(this.orderCreateData, 'coupon', { coupon_ids: [] });
 						}
 
 						this.$forceUpdate();
@@ -926,7 +928,7 @@ export default {
 		 * @param {Object} data
 		 */
 		selectCoupon(data) {
-			let ids = this.orderCreateData.coupon.coupon_ids || [];
+			let ids = [].concat(this.orderCreateData.coupon.coupon_ids || []);
 			let idx = ids.indexOf(data.coupon_id);
 
 			if (data.is_stackable == 1) {
@@ -947,7 +949,8 @@ export default {
 					ids = [data.coupon_id];
 				}
 			}
-			this.orderCreateData.coupon = { coupon_ids: ids };
+			this.$set(this.orderCreateData, 'coupon', { coupon_ids: ids });
+			this.$forceUpdate();
 		},
 		/**
 		 * 使用优惠券
