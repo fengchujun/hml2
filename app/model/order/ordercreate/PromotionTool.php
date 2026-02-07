@@ -364,52 +364,70 @@ trait PromotionTool
                 }
             }
 
-            if (count($coupon_ids) == 1) {
-                // 单张券：使用原有逻辑
-                $cid = $coupon_ids[0];
-                $coupon_info = $all_coupon_infos[$cid] ?? [];
-                if (empty($coupon_info)) {
-                    $this->setError(1, '优惠券不存在！');
-                } else {
-                    $result = $this->calculateSingleCouponDiscount($coupon_info, $goods_list);
-                    if ($result['is_coupon']) {
-                        $total_coupon_money = $result['coupon_money'];
-                        $valid_coupon_ids[] = $cid;
-                        $temp_goods_list = $this->distributionGoodsCouponMoney($result['coupon_goods_list'], $result['coupon_goods_money'], $total_coupon_money);
-                        $goods_list = array_merge($result['remaining_goods_list'], $temp_goods_list);
-                        $this->goods_list = $goods_list;
-                    } else {
-                        $this->setError(1, '优惠券不可用！');
-                    }
+            // 分离：不可叠加券（最多1张）和可叠加券
+            $non_stackable_coupon = null;
+            $non_stackable_cid = 0;
+            $stackable_coupons = [];
+            foreach ($all_coupon_infos as $cid => $info) {
+                if ($info['member_id'] != $this->member_id || $info['state'] != 1) continue;
+                if (($info['is_stackable'] ?? 0) == 1) {
+                    $stackable_coupons[$cid] = $info;
+                } elseif ($non_stackable_coupon === null) {
+                    $non_stackable_coupon = $info;
+                    $non_stackable_cid = $cid;
                 }
-            } else {
-                // 多张叠加券：所有券必须是 is_stackable=1
-                $stackable_coupons = [];
-                foreach ($all_coupon_infos as $cid => $info) {
-                    if (($info['is_stackable'] ?? 0) == 1 && $info['member_id'] == $this->member_id && $info['state'] == 1) {
-                        $stackable_coupons[$cid] = $info;
-                    }
-                }
+            }
 
-                if (empty($stackable_coupons)) {
-                    $this->setError(1, '所选优惠券不支持叠加使用！');
-                } else {
-                    // 叠加券都是 type=reward, at_least=0 的全场券，累加面额
-                    $coupon_goods_money = $this->goods_money;
-                    $coupon_goods_list = $goods_list;
-                    $goods_list = [];
-
-                    foreach ($stackable_coupons as $cid => $info) {
-                        $total_coupon_money += floatval($info['money']);
-                        $valid_coupon_ids[] = $cid;
-                    }
-                    // 叠加总额不能超过商品金额
-                    $total_coupon_money = min($total_coupon_money, $coupon_goods_money);
-
-                    // 按比例摊派到商品项
-                    $temp_goods_list = $this->distributionGoodsCouponMoney($coupon_goods_list, $coupon_goods_money, $total_coupon_money);
-                    $goods_list = array_merge($goods_list, $temp_goods_list);
+            // 第一步：处理不可叠加券（原有逻辑，支持所有类型/商品范围）
+            if ($non_stackable_coupon !== null) {
+                $result = $this->calculateSingleCouponDiscount($non_stackable_coupon, $goods_list);
+                if ($result['is_coupon']) {
+                    $ns_money = $result['coupon_money'];
+                    $temp_goods_list = $this->distributionGoodsCouponMoney($result['coupon_goods_list'], $result['coupon_goods_money'], $ns_money);
+                    $goods_list = array_merge($result['remaining_goods_list'], $temp_goods_list);
                     $this->goods_list = $goods_list;
+                    $total_coupon_money += $ns_money;
+                    $valid_coupon_ids[] = $non_stackable_cid;
+                }
+            }
+
+            // 第二步：处理可叠加券（累加面额，在不可叠加券基础上继续抵扣）
+            if (!empty($stackable_coupons)) {
+                $stackable_sum = 0;
+                $stackable_valid_ids = [];
+                foreach ($stackable_coupons as $cid => $info) {
+                    // 校验门槛：at_least 对比原始商品金额
+                    if (floatval($info['at_least']) <= $this->goods_money) {
+                        $stackable_sum += floatval($info['money']);
+                        $stackable_valid_ids[] = $cid;
+                    }
+                }
+
+                if ($stackable_sum > 0 && !empty($stackable_valid_ids)) {
+                    // 计算剩余可抵扣金额
+                    $remaining_money = 0;
+                    foreach ($goods_list as $v) {
+                        $remaining_money += $v['real_goods_money'];
+                    }
+                    $stackable_sum = min($stackable_sum, $remaining_money);
+
+                    if ($stackable_sum > 0) {
+                        // 保存已有的 coupon_money（不可叠加券已分摊的部分）
+                        $saved = [];
+                        foreach ($goods_list as $k => $v) {
+                            $saved[$k] = $v['coupon_money'] ?? 0;
+                        }
+                        // 分摊叠加券优惠到商品项
+                        $temp_goods_list = $this->distributionGoodsCouponMoney($goods_list, $remaining_money, $stackable_sum);
+                        // 合并：coupon_money = 不可叠加部分 + 叠加部分
+                        foreach ($temp_goods_list as $k => &$v) {
+                            $v['coupon_money'] = ($v['coupon_money'] ?? 0) + ($saved[$k] ?? 0);
+                        }
+                        unset($v);
+                        $this->goods_list = $temp_goods_list;
+                        $total_coupon_money += $stackable_sum;
+                        $valid_coupon_ids = array_merge($valid_coupon_ids, $stackable_valid_ids);
+                    }
                 }
             }
 

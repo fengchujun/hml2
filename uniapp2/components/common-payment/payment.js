@@ -311,19 +311,13 @@ export default {
 				this.$set(this.orderCreateData, 'coupon', { coupon_ids: [] });
 				return;
 			}
-			let stackableCoupons = this.coupon_list.filter(c => c.is_stackable == 1);
-			let nonStackableCoupons = this.coupon_list.filter(c => c.is_stackable != 1);
-
-			// 计算所有可叠加券面额总和
-			let stackableTotal = 0;
-			stackableCoupons.forEach(c => {
-				stackableTotal += parseFloat(c.money || 0);
-			});
-
-			// 找出最优的单张不可叠加券优惠
-			let bestNonStackable = null;
-			let bestNonStackableDiscount = 0;
+			let selectedIds = [];
 			let goodsMoney = this.paymentData ? parseFloat(this.paymentData.goods_money) : 0;
+
+			// 第一步：找最优的单选券（不可叠加）
+			let nonStackableCoupons = this.coupon_list.filter(c => c.is_stackable != 1);
+			let bestNonStackable = null;
+			let bestDiscount = 0;
 			nonStackableCoupons.forEach(c => {
 				let discount = 0;
 				if (c.type == 'reward' || c.type == 'divideticket') {
@@ -332,21 +326,21 @@ export default {
 					discount = goodsMoney * (10 - parseFloat(c.discount)) / 10;
 					if (c.discount_limit > 0) discount = Math.min(discount, parseFloat(c.discount_limit));
 				}
-				if (discount > bestNonStackableDiscount) {
-					bestNonStackableDiscount = discount;
+				if (discount > bestDiscount) {
+					bestDiscount = discount;
 					bestNonStackable = c;
 				}
 			});
-
-			// 选择优惠更大的方案
-			let selectedIds = [];
-			if (stackableTotal >= bestNonStackableDiscount && stackableCoupons.length > 0) {
-				selectedIds = stackableCoupons.map(c => c.coupon_id);
-			} else if (bestNonStackable) {
-				selectedIds = [bestNonStackable.coupon_id];
-			} else if (stackableCoupons.length > 0) {
-				selectedIds = stackableCoupons.map(c => c.coupon_id);
+			if (bestNonStackable) {
+				selectedIds.push(bestNonStackable.coupon_id);
 			}
+
+			// 第二步：叠加所有可叠加券
+			let stackableCoupons = this.coupon_list.filter(c => c.is_stackable == 1);
+			stackableCoupons.forEach(c => {
+				selectedIds.push(c.coupon_id);
+			});
+
 			this.$set(this.orderCreateData, 'coupon', { coupon_ids: selectedIds });
 		},
 		/**
@@ -930,23 +924,25 @@ export default {
 		selectCoupon(data) {
 			let ids = [].concat(this.orderCreateData.coupon.coupon_ids || []);
 			let idx = ids.indexOf(data.coupon_id);
+			// 可叠加的id集合
+			let stackableIdSet = this.coupon_list.filter(c => c.is_stackable == 1).map(c => c.coupon_id);
 
 			if (data.is_stackable == 1) {
-				// 可叠加券：toggle选中/取消
+				// 可叠加券：复选框，toggle 自己即可
 				if (idx > -1) {
 					ids.splice(idx, 1);
 				} else {
-					// 选择可叠加券时，移除已选的不可叠加券
-					let nonStackableIds = this.coupon_list.filter(c => c.is_stackable != 1).map(c => c.coupon_id);
-					ids = ids.filter(id => !nonStackableIds.includes(id));
 					ids.push(data.coupon_id);
 				}
 			} else {
-				// 不可叠加券：单选，取消其他所有
+				// 不可叠加券：单选逻辑，保留已选的叠加券
+				let keepStackable = ids.filter(id => stackableIdSet.includes(id));
 				if (idx > -1) {
-					ids = [];
+					// 取消当前不可叠加券，只保留叠加券
+					ids = keepStackable;
 				} else {
-					ids = [data.coupon_id];
+					// 选中当前不可叠加券，替换掉其它不可叠加券，保留叠加券
+					ids = keepStackable.concat([data.coupon_id]);
 				}
 			}
 			this.$set(this.orderCreateData, 'coupon', { coupon_ids: ids });

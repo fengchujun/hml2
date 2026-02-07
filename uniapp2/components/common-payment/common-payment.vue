@@ -615,7 +615,7 @@
 											<view v-if="couponItem.type == 'discount' && couponItem.discount_limit > 0" class="limit">最多可抵￥{{ couponItem.discount_limit }}</view>
 											<view class="time font-size-goods-tag">有效期：{{ couponItem.end_time ? $util.timeStampTurnTime(couponItem.end_time) : '长期有效' }}</view>
 										</view>
-										<view class="iconfont" :class="orderCreateData.coupon.coupon_ids && orderCreateData.coupon.coupon_ids.indexOf(couponItem.coupon_id) > -1 ? 'icon-yuan_checked color-base-text' : 'icon-yuan_checkbox'"></view>
+										<view class="iconfont" :class="orderCreateData.coupon.coupon_ids && orderCreateData.coupon.coupon_ids.indexOf(couponItem.coupon_id) > -1 ? (couponItem.is_stackable == 1 ? 'icon-fuxuankuang1 color-base-text' : 'icon-yuan_checked color-base-text') : (couponItem.is_stackable == 1 ? 'icon-fuxuankuang2' : 'icon-yuan_checkbox')"></view>
 									</view>
 								</view>
 							</view>
