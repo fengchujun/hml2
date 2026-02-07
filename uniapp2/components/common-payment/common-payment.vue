@@ -252,8 +252,8 @@
 						<view class="order-cell coupon" v-if="modules.indexOf('coupon') != -1">
 							<text class="tit">优惠券</text>
 							<view class="box text-overflow" @click="openPopup('couponPopup')">
-								<template v-if="orderCreateData.coupon && orderCreateData.coupon.coupon_id">
-									<text>已使用优惠券，优惠</text>
+								<template v-if="orderCreateData.coupon && orderCreateData.coupon.coupon_ids && orderCreateData.coupon.coupon_ids.length > 0">
+									<text>已使用{{ orderCreateData.coupon.coupon_ids.length }}张优惠券，优惠</text>
 									<text class="unit price-font">{{ $lang('common.currencySymbol') }}</text>
 									<text class="money price-font">{{ (calculateData && calculateData.coupon_money ? calculateData.coupon_money : 0) | moneyFormat }}</text>
 								</template>
@@ -611,11 +611,11 @@
 											</view>
 										</view>
 										<view class="desc-wrap">
-											<view class="coupon-name">{{ couponItem.coupon_name }}</view>
+											<view class="coupon-name">{{ couponItem.coupon_name }}<text v-if="couponItem.is_stackable == 1" style="display:inline-block;font-size:20rpx;color:#fff;background:var(--main-color);padding:0 8rpx;border-radius:4rpx;margin-left:8rpx;">可叠加</text></view>
 											<view v-if="couponItem.type == 'discount' && couponItem.discount_limit > 0" class="limit">最多可抵￥{{ couponItem.discount_limit }}</view>
 											<view class="time font-size-goods-tag">有效期：{{ couponItem.end_time ? $util.timeStampTurnTime(couponItem.end_time) : '长期有效' }}</view>
 										</view>
-										<view class="iconfont" :class="orderCreateData.coupon.coupon_id == couponItem.coupon_id ? 'icon-yuan_checked color-base-text' : 'icon-yuan_checkbox'"></view>
+										<view class="iconfont" :class="orderCreateData.coupon.coupon_ids && orderCreateData.coupon.coupon_ids.indexOf(couponItem.coupon_id) > -1 ? 'icon-yuan_checked color-base-text' : 'icon-yuan_checkbox'"></view>
 									</view>
 								</view>
 							</view>

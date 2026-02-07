@@ -100,6 +100,9 @@ class CouponType extends BaseModel
         if(isset($data['use_store'])){
             $update_data['use_store'] = $data['use_store'];
         }
+        if(isset($data['is_stackable'])){
+            $update_data['is_stackable'] = $data['is_stackable'];
+        }
         model('promotion_coupon')->update($update_data, [ [ 'coupon_type_id', '=', $coupon_type_id ], [ 'state', '=', 1 ] ]);
         $cron = new Cron();
         $cron->deleteCron([ [ 'event', '=', 'CronCouponTypeEnd' ], [ 'relate_id', '=', $coupon_type_id ] ]);

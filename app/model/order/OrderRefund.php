@@ -679,14 +679,21 @@ class OrderRefund extends BaseModel
         $info['pay_type'] = $order_info['pay_type'];
 
         $coupon_info = [];
-        if ($order_info['coupon_id'] > 0) {
+        $has_coupon = !empty($order_info['coupon_ids']) || $order_info['coupon_id'] > 0;
+        if ($has_coupon) {
             $order_goods_count = model('order_goods')->getCount([['order_id', '=', $order_id]], 'order_goods_id');
             $refund_count = model('order_goods')->getCount([['order_id', '=', $order_id], ['refund_status', '=', OrderRefundDict::REFUND_COMPLETE]], 'order_goods_id');
 
             if (($order_goods_count - $refund_count) == 1) {
-                //查询优惠劵信息
                 $coupon_model = new Coupon();
-                $coupon_info = $coupon_model->getCouponInfo([['coupon_id', '=', $order_info['coupon_id']]], 'coupon_id,coupon_name,type,at_least,money,discount,discount_limit')['data'];
+                // 优先使用 coupon_ids（叠加券）
+                $coupon_ids_str = $order_info['coupon_ids'] ?? '';
+                if (!empty($coupon_ids_str)) {
+                    $first_coupon_id = explode(',', $coupon_ids_str)[0];
+                } else {
+                    $first_coupon_id = $order_info['coupon_id'];
+                }
+                $coupon_info = $coupon_model->getCouponInfo([['coupon_id', '=', $first_coupon_id]], 'coupon_id,coupon_name,type,at_least,money,discount,discount_limit')['data'];
             }
         }
         $info['coupon_info'] = $coupon_info;
@@ -793,14 +800,21 @@ class OrderRefund extends BaseModel
         $order_info = model('order')->getInfo([['order_id', '=', $order_goods_info['order_id']]]);
 
         $coupon_info = [];
-        if ($order_info['coupon_id'] > 0) {
+        $has_coupon = !empty($order_info['coupon_ids']) || $order_info['coupon_id'] > 0;
+        if ($has_coupon) {
             $order_goods_count = model('order_goods')->getCount([['order_id', '=', $order_id]], 'order_goods_id');
             $refund_count = model('order_goods')->getCount([['order_id', '=', $order_id], ['refund_status', '=', OrderRefundDict::REFUND_COMPLETE]], 'order_goods_id');
 
             if (($order_goods_count - $refund_count) == 1) {
-                //查询优惠劵信息
                 $coupon_model = new Coupon();
-                $coupon_info = $coupon_model->getCouponInfo([['coupon_id', '=', $order_info['coupon_id']]], 'coupon_id,coupon_name,type,at_least,money,discount,discount_limit')['data'];
+                // 优先使用 coupon_ids（叠加券）
+                $coupon_ids_str = $order_info['coupon_ids'] ?? '';
+                if (!empty($coupon_ids_str)) {
+                    $first_coupon_id = explode(',', $coupon_ids_str)[0];
+                } else {
+                    $first_coupon_id = $order_info['coupon_id'];
+                }
+                $coupon_info = $coupon_model->getCouponInfo([['coupon_id', '=', $first_coupon_id]], 'coupon_id,coupon_name,type,at_least,money,discount,discount_limit')['data'];
             }
         }
 

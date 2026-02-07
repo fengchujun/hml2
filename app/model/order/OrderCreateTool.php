@@ -46,7 +46,8 @@ trait OrderCreateTool
     public $out_trade_no;
     public $order_key;
     public $config = [];//配置
-    public $coupon_id = 0;//优惠券
+    public $coupon_id = 0;//优惠券（兼容旧逻辑，存首张）
+    public $coupon_ids = [];//优惠券ID数组（支持叠加）
     public $coupon_money = 0;//优惠券金额
     public $order_type = [];//订单类型(array)
     public $is_point = 0;//是否使用积分
@@ -396,6 +397,7 @@ trait OrderCreateTool
         if ($this->getInsertDataWhereResult($modules, 'discount', $op)) {
             $discount_data = [
                 'coupon_id' => $this->coupon_id,
+                'coupon_ids' => !empty($this->coupon_ids) ? implode(',', $this->coupon_ids) : '',
             ];
             $data = array_merge($data, $discount_data);
         }

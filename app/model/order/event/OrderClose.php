@@ -119,11 +119,21 @@ class OrderClose extends BaseModel
 
 
         /******************************************************* 优惠券相关 **********************************************************/
-        //返还店铺优惠券
-        $coupon_id = $order_info['coupon_id'];
-        if ($coupon_id > 0) {
-            $coupon_model = new Coupon();
-            $coupon_model->refundCoupon($coupon_id, $order_info['member_id']);
+        //返还店铺优惠券（支持叠加多券退还）
+        $coupon_model = new Coupon();
+        $coupon_ids_str = $order_info['coupon_ids'] ?? '';
+        if (!empty($coupon_ids_str)) {
+            $coupon_id_arr = explode(',', $coupon_ids_str);
+            foreach ($coupon_id_arr as $cid) {
+                if ($cid > 0) {
+                    $coupon_model->refundCoupon($cid, $order_info['member_id']);
+                }
+            }
+        } else {
+            $coupon_id = $order_info['coupon_id'];
+            if ($coupon_id > 0) {
+                $coupon_model->refundCoupon($coupon_id, $order_info['member_id']);
+            }
         }
         //平台优惠券
         /******************************************************* 退还余额相关 **********************************************************/

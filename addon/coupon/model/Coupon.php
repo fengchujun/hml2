@@ -115,6 +115,7 @@ class Coupon extends BaseModel
                 //适用于门店
                 'use_channel' => $coupon_type_info[ 'use_channel' ],
                 'use_store' => $coupon_type_info[ 'use_store' ],
+                'is_stackable' => $coupon_type_info[ 'is_stackable' ] ?? 0,
             ];
 
             if ($coupon_type_info[ 'validity_type' ] == 0) {
@@ -212,6 +213,7 @@ class Coupon extends BaseModel
                     'end_time' => $end_time,
                     'use_channel' => $coupon_type_info[ 'use_channel' ],//适用场景 线上线下
                     'use_store' => $coupon_type_info[ 'use_store' ],//适用于门店
+                    'is_stackable' => $coupon_type_info[ 'is_stackable' ] ?? 0,
                 ];
                 for ($i = 0; $i < $item_num; $i++) {
                     $data[ 'coupon_code' ] = $this->getCode();

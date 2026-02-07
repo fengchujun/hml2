@@ -16,7 +16,7 @@ export default {
 				invoice_title_type: 1, // 抬头类型  1 个人 2 企业
 				is_tax_invoice: 0, // 是否需要增值税专用发票  0 不需要 1 需要
 				coupon: {
-					coupon_id: 0
+					coupon_ids: []
 				},
 				delivery: {},
 				member_goods_card: {}, // 会员次卡
@@ -280,7 +280,7 @@ export default {
 			//查询优惠券
 			if (this.modules.indexOf('coupon') != -1) {
 				let paymentParams = this.handleCreateData()
-				this.orderCreateData.coupon.coupon_id = 0;
+				this.orderCreateData.coupon.coupon_ids = [];
 				this.$api.sendRequest({
 					url: '/api/ordercreate/getcouponlist',
 					data: paymentParams,
@@ -288,9 +288,8 @@ export default {
 						if (res.code == 0 && res.data) {
 							let data = res.data;
 							this.coupon_list = data;
-							if(this.coupon_list.length > 0){
-								this.orderCreateData.coupon.coupon_id = this.coupon_list[0].coupon_id;
-							}
+							// 自动选择最大优惠组合
+							this.autoSelectBestCoupons();
 						} else {
 							this.$util.showToast({
 								title: res.message
@@ -301,6 +300,51 @@ export default {
 				});
 			}else{
 				typeof callback == 'function' && callback();
+			}
+		},
+		/**
+		 * 自动选择最大优惠组合
+		 * 规则：比较所有可叠加券面额总和 vs 每张不可叠加券的单独优惠，取最大值
+		 */
+		autoSelectBestCoupons() {
+			if (!this.coupon_list || this.coupon_list.length == 0) {
+				this.orderCreateData.coupon.coupon_ids = [];
+				return;
+			}
+			let stackableCoupons = this.coupon_list.filter(c => c.is_stackable == 1);
+			let nonStackableCoupons = this.coupon_list.filter(c => c.is_stackable != 1);
+
+			// 计算所有可叠加券面额总和
+			let stackableTotal = 0;
+			stackableCoupons.forEach(c => {
+				stackableTotal += parseFloat(c.money || 0);
+			});
+
+			// 找出最优的单张不可叠加券优惠
+			let bestNonStackable = null;
+			let bestNonStackableDiscount = 0;
+			let goodsMoney = this.paymentData ? this.paymentData.goods_money : 0;
+			nonStackableCoupons.forEach(c => {
+				let discount = 0;
+				if (c.type == 'reward' || c.type == 'divideticket') {
+					discount = parseFloat(c.money || 0);
+				} else if (c.type == 'discount') {
+					discount = goodsMoney * (10 - parseFloat(c.discount)) / 10;
+					if (c.discount_limit > 0) discount = Math.min(discount, parseFloat(c.discount_limit));
+				}
+				if (discount > bestNonStackableDiscount) {
+					bestNonStackableDiscount = discount;
+					bestNonStackable = c;
+				}
+			});
+
+			// 选择优惠更大的方案
+			if (stackableTotal >= bestNonStackableDiscount && stackableCoupons.length > 0) {
+				this.orderCreateData.coupon.coupon_ids = stackableCoupons.map(c => c.coupon_id);
+			} else if (bestNonStackable) {
+				this.orderCreateData.coupon.coupon_ids = [bestNonStackable.coupon_id];
+			} else if (stackableCoupons.length > 0) {
+				this.orderCreateData.coupon.coupon_ids = stackableCoupons.map(c => c.coupon_id);
 			}
 		},
 		/**
@@ -369,8 +413,14 @@ export default {
 							}
 						});
 
-						if (!res.data.coupon_id) this.orderCreateData.coupon.coupon_id = 0;
-						else this.orderCreateData.coupon.coupon_id = res.data.coupon_id;
+						// 同步后端返回的已使用券ID
+						if (res.data.coupon_ids && res.data.coupon_ids.length > 0) {
+							this.orderCreateData.coupon.coupon_ids = res.data.coupon_ids;
+						} else if (res.data.coupon_id > 0) {
+							this.orderCreateData.coupon.coupon_ids = [res.data.coupon_id];
+						} else {
+							this.orderCreateData.coupon.coupon_ids = [];
+						}
 
 						this.$forceUpdate();
 					} else {
@@ -876,12 +926,28 @@ export default {
 		 * @param {Object} data
 		 */
 		selectCoupon(data) {
-			if (this.orderCreateData.coupon.coupon_id == data.coupon_id) this.orderCreateData.coupon = {
-				coupon_id: 0
-			};
-			else this.orderCreateData.coupon = {
-				coupon_id: data.coupon_id
-			};
+			let ids = this.orderCreateData.coupon.coupon_ids || [];
+			let idx = ids.indexOf(data.coupon_id);
+
+			if (data.is_stackable == 1) {
+				// 可叠加券：toggle选中/取消
+				if (idx > -1) {
+					ids.splice(idx, 1);
+				} else {
+					// 选择可叠加券时，移除已选的不可叠加券
+					let nonStackableIds = this.coupon_list.filter(c => c.is_stackable != 1).map(c => c.coupon_id);
+					ids = ids.filter(id => !nonStackableIds.includes(id));
+					ids.push(data.coupon_id);
+				}
+			} else {
+				// 不可叠加券：单选，取消其他所有
+				if (idx > -1) {
+					ids = [];
+				} else {
+					ids = [data.coupon_id];
+				}
+			}
+			this.orderCreateData.coupon = { coupon_ids: ids };
 		},
 		/**
 		 * 使用优惠券

@@ -211,16 +211,23 @@ trait PromotionTool
     }
 
     /**
-     * 使用优惠券
+     * 使用优惠券（支持多张叠加）
      * @return void
      * @throws Exception
      */
     public function useCoupon()
     {
-        if ($this->coupon_id > 0 && $this->coupon_money > 0) {
-            //优惠券处理方案
-            $member_coupon_model = new Coupon();
-            $coupon_use_result = $member_coupon_model->useCoupon($this->coupon_id, $this->member_id, $this->order_id); //使用优惠券
+        $member_coupon_model = new Coupon();
+        // 优先处理叠加券
+        if (!empty($this->coupon_ids) && $this->coupon_money > 0) {
+            foreach ($this->coupon_ids as $cid) {
+                $coupon_use_result = $member_coupon_model->useCoupon($cid, $this->member_id, $this->order_id);
+                if ($coupon_use_result['code'] < 0) {
+                    throw new OrderException('COUPON_ERROR');
+                }
+            }
+        } elseif ($this->coupon_id > 0 && $this->coupon_money > 0) {
+            $coupon_use_result = $member_coupon_model->useCoupon($this->coupon_id, $this->member_id, $this->order_id);
             if ($coupon_use_result['code'] < 0) {
                 throw new OrderException('COUPON_ERROR');
             }
@@ -228,124 +235,193 @@ trait PromotionTool
     }
 
     /**
-     * 优惠券活动
+     * 计算单张优惠券的折扣金额（内部辅助方法）
+     */
+    private function calculateSingleCouponDiscount($coupon_info, $goods_list)
+    {
+        $is_coupon = false;
+        $coupon_goods_money = 0;
+        $coupon_goods_list = [];
+        $coupon_money = 0;
+        $remaining_goods_list = $goods_list;
+
+        if ($coupon_info['member_id'] != $this->member_id || $coupon_info['state'] != 1) {
+            return ['is_coupon' => false, 'coupon_money' => 0, 'coupon_goods_money' => 0, 'coupon_goods_list' => [], 'remaining_goods_list' => $goods_list];
+        }
+
+        $goods_category_model = new GoodsCategoryModel();
+        switch ($coupon_info['goods_type']) {
+            case CouponDict::all:
+                if ($coupon_info['at_least'] <= $this->goods_money) {
+                    $is_coupon = true;
+                }
+                $coupon_goods_money = $this->goods_money;
+                $coupon_goods_list = $remaining_goods_list;
+                $remaining_goods_list = [];
+                break;
+            case CouponDict::selected:
+            case CouponDict::selected_out:
+                $coupon_goods_ids = explode(',', $coupon_info['goods_ids']);
+                $temp_money = 0;
+                $is_support = false;
+                $judge_res = $coupon_info['goods_type'] == CouponDict::selected;
+                foreach ($remaining_goods_list as $goods_k => $goods_v) {
+                    if (in_array($goods_v['goods_id'], $coupon_goods_ids) == $judge_res) {
+                        $temp_money += $goods_v['goods_money'];
+                        $coupon_goods_list[] = $goods_v;
+                        unset($remaining_goods_list[$goods_k]);
+                        $is_support = true;
+                    }
+                }
+                if ($is_support && $temp_money >= $coupon_info['at_least']) {
+                    $is_coupon = true;
+                }
+                $coupon_goods_money = $temp_money;
+                break;
+            case CouponDict::category_selected:
+            case CouponDict::category_selected_out:
+                $coupon_category_ids = $goods_category_model->getGoodsCategoryLeafIds($coupon_info['goods_ids'])['data'];
+                $temp_money = 0;
+                $is_support = false;
+                foreach ($remaining_goods_list as $goods_k => $goods_v) {
+                    $goods_category_ids = explode(',', trim($goods_v['category_id'], ','));
+                    $array_intersect = array_intersect($coupon_category_ids, $goods_category_ids);
+                    if ($coupon_info['goods_type'] == CouponDict::category_selected) {
+                        $judge_res = count($array_intersect) > 0;
+                    } else {
+                        $judge_res = count($array_intersect) == 0;
+                    }
+                    if ($judge_res) {
+                        $temp_money += $goods_v['goods_money'];
+                        $coupon_goods_list[] = $goods_v;
+                        unset($remaining_goods_list[$goods_k]);
+                        $is_support = true;
+                    }
+                }
+                if ($is_support && $temp_money >= $coupon_info['at_least']) {
+                    $is_coupon = true;
+                }
+                $coupon_goods_money = $temp_money;
+                break;
+        }
+
+        if ($is_coupon) {
+            if ($coupon_info['type'] == 'reward') {
+                $coupon_money = min($coupon_info['money'], $coupon_goods_money);
+            } else if ($coupon_info['type'] == 'divideticket') {
+                $coupon_money = min($coupon_info['money'], $coupon_goods_money);
+            } else if ($coupon_info['type'] == 'discount') {
+                $coupon_money = $coupon_goods_money * (10 - $coupon_info['discount']) / 10;
+                $coupon_money = $coupon_money > $coupon_info['discount_limit'] && $coupon_info['discount_limit'] != 0 ? $coupon_info['discount_limit'] : $coupon_money;
+                $coupon_money = min($coupon_money, $coupon_goods_money);
+                $coupon_money = round($coupon_money, 2);
+            }
+        }
+
+        return [
+            'is_coupon' => $is_coupon,
+            'coupon_money' => $coupon_money,
+            'coupon_goods_money' => $coupon_goods_money,
+            'coupon_goods_list' => $coupon_goods_list,
+            'remaining_goods_list' => $remaining_goods_list,
+        ];
+    }
+
+    /**
+     * 优惠券活动（支持叠加）
      * @return true
      */
     public function couponPromotion()
     {
         $coupon_money = 0;
+        // 优先读取 coupon_ids（叠加模式），兼容旧的 coupon_id
+        $coupon_ids = $this->param['coupon']['coupon_ids'] ?? [];
         $coupon_id = $this->param['coupon']['coupon_id'] ?? 0;
-        if ($coupon_id > 0) {
-            //查询优惠券信息,计算优惠券费用
+
+        // 兼容：如果传了旧的 coupon_id 且没有 coupon_ids，转为数组
+        if (empty($coupon_ids) && $coupon_id > 0) {
+            $coupon_ids = [$coupon_id];
+        }
+
+        if (!empty($coupon_ids)) {
             $coupon_model = new Coupon();
-            $coupon_info = $coupon_model->getCouponInfo(
+            $goods_list = $this->goods_list;
+            $total_coupon_money = 0;
+            $valid_coupon_ids = [];
+
+            // 查询所有选中的优惠券信息
+            $all_coupon_infos = [];
+            foreach ($coupon_ids as $cid) {
+                $coupon_info = $coupon_model->getCouponInfo(
                     [
-                        ['coupon_id', '=', $coupon_id],
+                        ['coupon_id', '=', $cid],
                         ['site_id', '=', $this->site_id],
                         ['use_channel', '<>', 'offline'],
                         ['', 'exp', Db::raw("use_store = 'all' or FIND_IN_SET({$this->store_id}, use_store)")],
                     ], '*')['data'] ?? [];
-            $is_coupon = false;
-            $coupon_goods_money = 0;
-            $goods_list = $this->goods_list;
-
-            if (empty($coupon_info)) {
-                $this->setError(1, '优惠券不存在！');
-            } else if ($coupon_info['member_id'] == $this->member_id && $coupon_info['state'] == 1) {
-                $goods_category_model = new GoodsCategoryModel();
-                $coupon_goods_list = [];
-                switch ($coupon_info['goods_type']) {
-                    //全场通用优惠券
-                    case CouponDict::all:
-                        if ($coupon_info['at_least'] <= $this->goods_money) {
-                            $is_coupon = true;
-                        } else {
-                            $this->setError(1, '优惠券不可用！');
-                        }
-                        $coupon_goods_money = $this->goods_money;
-                        $coupon_goods_list = $goods_list;
-                        $goods_list = [];
-                        break;
-                    //指定商品可用/不可用
-                    case CouponDict::selected:
-                    case CouponDict::selected_out:
-                        // 指定商品
-                        $coupon_goods_ids = explode(',', $coupon_info['goods_ids']);
-                        $temp_money = 0;
-                        $is_support = false;
-                        $judge_res = $coupon_info['goods_type'] == CouponDict::selected;
-                        foreach ($goods_list as $goods_k => $goods_v) {
-                            if (in_array($goods_v['goods_id'], $coupon_goods_ids) == $judge_res) {
-                                $temp_money += $goods_v['goods_money'];
-                                $coupon_goods_list[] = $goods_v;
-                                unset($goods_list[$goods_k]);
-                                $is_support = true;
-                            }
-                        }
-                        if ($is_support && $temp_money >= $coupon_info['at_least']) {
-                            $is_coupon = true;
-                        }
-                        $coupon_goods_money = $temp_money;
-                        break;
-                    //指定分类可用/不可用
-                    case CouponDict::category_selected:
-                    case CouponDict::category_selected_out:
-                        // 指定商品
-                        $coupon_category_ids = $goods_category_model->getGoodsCategoryLeafIds($coupon_info['goods_ids'])['data'];
-                        $temp_money = 0;
-                        $is_support = false;
-                        foreach ($goods_list as $goods_k => $goods_v) {
-                            $goods_category_ids = explode(',', trim($goods_v['category_id'], ','));
-                            $array_intersect = array_intersect($coupon_category_ids, $goods_category_ids);
-                            if ($coupon_info['goods_type'] == CouponDict::category_selected) {
-                                $judge_res = count($array_intersect) > 0;
-                            } else {
-                                $judge_res = count($array_intersect) == 0;
-                            }
-                            if ($judge_res) {
-                                $temp_money += $goods_v['goods_money'];
-                                $coupon_goods_list[] = $goods_v;
-                                unset($goods_list[$goods_k]);
-                                $is_support = true;
-                            }
-                        }
-                        if ($is_support && $temp_money >= $coupon_info['at_least']) {
-                            $is_coupon = true;
-                        }
-                        $coupon_goods_money = $temp_money;
-                        break;
+                if (!empty($coupon_info)) {
+                    $all_coupon_infos[$cid] = $coupon_info;
                 }
             }
 
-            if ($is_coupon) {
-                $coupon_money = 0;
-                if ($coupon_info['type'] == 'reward') {//满减优惠券
-                    $coupon_money = min($coupon_info['money'], $coupon_goods_money);
-                } else if ($coupon_info['type'] == 'divideticket') {//瓜分优惠券
-                    $coupon_money = min($coupon_info['money'], $coupon_goods_money);
-                } else if ($coupon_info['type'] == 'discount') {//折扣优惠券
-                    //计算折扣优惠金额
-                    $coupon_money = $coupon_goods_money * (10 - $coupon_info['discount']) / 10;
-                    $coupon_money = $coupon_money > $coupon_info['discount_limit'] && $coupon_info['discount_limit'] != 0 ? $coupon_info['discount_limit'] : $coupon_money;
-                    $coupon_money = min($coupon_money, $coupon_goods_money);
-                    $coupon_money = round($coupon_money, 2);
+            if (count($coupon_ids) == 1) {
+                // 单张券：使用原有逻辑
+                $cid = $coupon_ids[0];
+                $coupon_info = $all_coupon_infos[$cid] ?? [];
+                if (empty($coupon_info)) {
+                    $this->setError(1, '优惠券不存在！');
+                } else {
+                    $result = $this->calculateSingleCouponDiscount($coupon_info, $goods_list);
+                    if ($result['is_coupon']) {
+                        $total_coupon_money = $result['coupon_money'];
+                        $valid_coupon_ids[] = $cid;
+                        $temp_goods_list = $this->distributionGoodsCouponMoney($result['coupon_goods_list'], $result['coupon_goods_money'], $total_coupon_money);
+                        $goods_list = array_merge($result['remaining_goods_list'], $temp_goods_list);
+                        $this->goods_list = $goods_list;
+                    } else {
+                        $this->setError(1, '优惠券不可用！');
+                    }
                 }
-                //计算订单项的金额
-                $temp_goods_list = $this->distributionGoodsCouponMoney($coupon_goods_list, $coupon_goods_money, $coupon_money);
-                $goods_list = array_merge($goods_list, $temp_goods_list);
-                $this->goods_list = $goods_list;
             } else {
-                $this->setError(1, '优惠券不可用！');
+                // 多张叠加券：所有券必须是 is_stackable=1
+                $stackable_coupons = [];
+                foreach ($all_coupon_infos as $cid => $info) {
+                    if (($info['is_stackable'] ?? 0) == 1 && $info['member_id'] == $this->member_id && $info['state'] == 1) {
+                        $stackable_coupons[$cid] = $info;
+                    }
+                }
+
+                if (empty($stackable_coupons)) {
+                    $this->setError(1, '所选优惠券不支持叠加使用！');
+                } else {
+                    // 叠加券都是 type=reward, at_least=0 的全场券，累加面额
+                    $coupon_goods_money = $this->goods_money;
+                    $coupon_goods_list = $goods_list;
+                    $goods_list = [];
+
+                    foreach ($stackable_coupons as $cid => $info) {
+                        $total_coupon_money += floatval($info['money']);
+                        $valid_coupon_ids[] = $cid;
+                    }
+                    // 叠加总额不能超过商品金额
+                    $total_coupon_money = min($total_coupon_money, $coupon_goods_money);
+
+                    // 按比例摊派到商品项
+                    $temp_goods_list = $this->distributionGoodsCouponMoney($coupon_goods_list, $coupon_goods_money, $total_coupon_money);
+                    $goods_list = array_merge($goods_list, $temp_goods_list);
+                    $this->goods_list = $goods_list;
+                }
             }
-        }
-        if ($coupon_money > 0) {
-            if ($coupon_money > $this->order_money) {
-                $coupon_money = $this->order_money;
-            }
-            $this->order_money -= $coupon_money;
-            $this->coupon_money = $coupon_money;
-            if ($coupon_id > 0) {
-                $this->coupon_id = $coupon_id;
+
+            $coupon_money = $total_coupon_money;
+            if ($coupon_money > 0) {
+                if ($coupon_money > $this->order_money) {
+                    $coupon_money = $this->order_money;
+                }
+                $this->order_money -= $coupon_money;
+                $this->coupon_money = $coupon_money;
+                $this->coupon_ids = $valid_coupon_ids;
+                $this->coupon_id = !empty($valid_coupon_ids) ? $valid_coupon_ids[0] : 0;
             }
         }
         return true;
